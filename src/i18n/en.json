@@ -1,0 +1,75 @@
+{
+  "debug": {
+    "title": "Debug Panel",
+    "layout": "Keyboard Layout",
+    "gazeOffset": "Gaze Offset",
+    "reset": "Reset",
+    "start": "Start Experiment",
+    "tobiiNotConnected": "Not connected — run bridge.py",
+    "cameraUnavailable": "Camera unavailable",
+    "connecting": "Connecting...",
+    "initializing": "Initializing...",
+    "smileLabel": "Smile"
+  },
+  "welcome": {
+    "title": "Gaze Input Research",
+    "participantId": "Participant ID",
+    "selectLanguage": "Select Language",
+    "start": "Start"
+  },
+  "deviceCheck": {
+    "title": "Device Check",
+    "camera": "Camera",
+    "tobii": "Tobii Eye Tracker",
+    "cameraOk": "Camera ready",
+    "cameraError": "Camera access denied",
+    "tobiiOk": "Tobii connected",
+    "tobiiError": "Tobii not connected — start bridge.py first",
+    "tobiiReminder": "Please complete Tobii calibration in Tobii software before continuing.",
+    "next": "Continue"
+  },
+  "tutorial": {
+    "title": "Tutorial",
+    "smileCalib": "Smile Calibration",
+    "smileCalibInstruction": "Please smile naturally for 3 seconds.",
+    "smileCalibStart": "Start Calibration",
+    "smileCalibDone": "Calibration complete. Your smile threshold: {threshold}",
+    "dwellInstruction": "Look at a key and hold your gaze to select it.",
+    "blinkInstruction": "Look at a key and blink to select it.",
+    "smileInstruction": "Look at a key, then smile to select it.",
+    "practice": "Practice",
+    "practiceTarget": "Input: {char}",
+    "practiceComplete": "Practice complete!",
+    "beginExperiment": "Begin Experiment"
+  },
+  "experiment": {
+    "condition": "Condition {index} of 6",
+    "layout": "Layout: {layout}",
+    "inputMethod": "Method: {method}",
+    "target": "Type: {phrase}",
+    "rest": "Rest",
+    "restMessage": "Take a break. Continue in {seconds}s.",
+    "restSkip": "Continue now"
+  },
+  "survey": {
+    "title": "How do you feel right now?",
+    "instruction": "Rate each word on a scale of 1 (not at all) to 5 (extremely).",
+    "submit": "Submit",
+    "scale": ["Not at all", "A little", "Moderately", "Quite a bit", "Extremely"]
+  },
+  "export": {
+    "title": "Experiment Complete",
+    "download": "Download Data (CSV)",
+    "thankYou": "Thank you for participating!"
+  },
+  "panas": {
+    "items": [
+      "Interested", "Distressed", "Excited", "Upset", "Strong",
+      "Guilty", "Scared", "Enthusiastic", "Proud", "Irritable",
+      "Alert", "Ashamed", "Inspired", "Nervous", "Determined",
+      "Attentive", "Jittery", "Active", "Afraid", "Hostile"
+    ],
+    "pa": [0, 2, 4, 8, 10, 12, 14, 15, 17, 3],
+    "na": [1, 3, 5, 6, 9, 11, 13, 16, 18, 19]
+  }
+}

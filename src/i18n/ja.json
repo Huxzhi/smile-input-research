@@ -1,0 +1,75 @@
+{
+  "debug": {
+    "title": "デバッグパネル",
+    "layout": "キーボードレイアウト",
+    "gazeOffset": "視線オフセット",
+    "reset": "リセット",
+    "start": "実験開始",
+    "tobiiNotConnected": "未接続 — bridge.py を起動してください",
+    "cameraUnavailable": "カメラ使用不可",
+    "connecting": "接続中...",
+    "initializing": "初期化中...",
+    "smileLabel": "笑顔"
+  },
+  "welcome": {
+    "title": "視線入力研究",
+    "participantId": "参加者ID",
+    "selectLanguage": "言語を選択",
+    "start": "開始"
+  },
+  "deviceCheck": {
+    "title": "デバイス確認",
+    "camera": "カメラ",
+    "tobii": "Tobii アイトラッカー",
+    "cameraOk": "カメラ準備完了",
+    "cameraError": "カメラへのアクセスが拒否されました",
+    "tobiiOk": "Tobii 接続済み",
+    "tobiiError": "Tobii 未接続 — bridge.py を起動してください",
+    "tobiiReminder": "続行前に、Tobii ソフトウェアでキャリブレーションを完了してください。",
+    "next": "次へ"
+  },
+  "tutorial": {
+    "title": "チュートリアル",
+    "smileCalib": "笑顔キャリブレーション",
+    "smileCalibInstruction": "3秒間、自然に笑ってください。",
+    "smileCalibStart": "キャリブレーション開始",
+    "smileCalibDone": "キャリブレーション完了。笑顔しきい値：{threshold}",
+    "dwellInstruction": "キーを見つめて視線を保持すると選択されます。",
+    "blinkInstruction": "キーを見つめてまばたきすると選択されます。",
+    "smileInstruction": "キーを見つめて笑顔になると選択されます。",
+    "practice": "練習",
+    "practiceTarget": "入力：{char}",
+    "practiceComplete": "練習完了！",
+    "beginExperiment": "実験開始"
+  },
+  "experiment": {
+    "condition": "条件 {index} / 6",
+    "layout": "レイアウト：{layout}",
+    "inputMethod": "方式：{method}",
+    "target": "入力してください：{phrase}",
+    "rest": "休憩",
+    "restMessage": "休憩してください。{seconds}秒後に続きます。",
+    "restSkip": "今すぐ続ける"
+  },
+  "survey": {
+    "title": "今の気持ちはどうですか？",
+    "instruction": "各単語について1（全くない）から5（非常に強い）で評価してください。",
+    "submit": "送信",
+    "scale": ["全くない", "少し", "適度に", "かなり", "非常に強く"]
+  },
+  "export": {
+    "title": "実験終了",
+    "download": "データをダウンロード（CSV）",
+    "thankYou": "ご参加ありがとうございました！"
+  },
+  "panas": {
+    "items": [
+      "関心がある", "苦悩した", "興奮している", "動揺した", "強い",
+      "罪悪感のある", "怖い", "熱心な", "誇らしい", "いらいらした",
+      "注意深い", "恥ずかしい", "インスピレーションを受けた", "緊張した", "断固とした",
+      "注意を向けている", "そわそわした", "活動的な", "恐れた", "敵意のある"
+    ],
+    "pa": [0, 2, 4, 8, 10, 12, 14, 15, 17, 3],
+    "na": [1, 3, 5, 6, 9, 11, 13, 16, 18, 19]
+  }
+}

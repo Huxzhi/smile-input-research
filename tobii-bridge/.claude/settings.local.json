@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Read(//c/Program Files/Tobii/**)",
+      "Read(//c/Program Files \\(x86\\)/**)",
+      "Bash(find \"C:/Program Files/Tobii/Tobii EyeX\" -name \"tobii_stream_engine.dll\" -exec file {} \\\\;)"
+    ]
+  }
+}

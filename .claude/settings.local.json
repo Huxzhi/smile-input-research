@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(/home/huxzhi-arch/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7/skills/brainstorming/scripts/start-server.sh:*)",
+      "WebSearch",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(npm create:*)",
+      "Bash(npm --version)",
+      "Read(//usr/bin/**)",
+      "Read(//home/huxzhi-arch/**)",
+      "Bash(pacman -Ss nodejs npm)",
+      "Bash(pnpm --version)",
+      "Bash(bun:*)",
+      "Bash(pnpm create:*)",
+      "Bash(printf 'y\\\\n')",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm approve-builds:*)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm vitest:*)",
+      "Bash(pnpm tsc:*)",
+      "Bash(timeout 10 pnpm dev)"
+    ]
+  }
+}
