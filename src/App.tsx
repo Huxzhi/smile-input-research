@@ -122,8 +122,13 @@ export default function App() {
         {page === 'experiment' && session && (
           <ExperimentPage session={session} addLog={addLog} onNext={() => goTo('survey')} />
         )}
-        {page === 'survey' && (
-          <SurveyPage onNext={() => goTo('debug')} />
+        {page === 'survey' && session && (
+          <SurveyPage
+            sessionId={session.sessionId}
+            participantId={session.participantId}
+            addLog={addLog}
+            onNext={() => goTo('debug')}
+          />
         )}
       </div>
     </I18nProvider>
