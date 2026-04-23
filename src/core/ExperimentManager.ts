@@ -40,6 +40,8 @@ export class ExperimentManager {
   }
 
   private buildConditionPhrases(pid: string, ppc: number): string[][] {
+    const maxPpc = Math.floor(PHRASES.length / NUM_CONDITIONS)
+    if (ppc > maxPpc) throw new Error(`phrasesPerCondition ${ppc} exceeds maximum ${maxPpc}`)
     const n = parseInt(pid, 10) || 1
     const totalNeeded = NUM_CONDITIONS * ppc
     // Offset varies per participant, stays within bounds

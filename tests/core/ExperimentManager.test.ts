@@ -107,4 +107,24 @@ describe('ExperimentManager — config override', () => {
     expect(mgr.getConditionOrder()[0].layout).toBe('qwerty')
     expect(mgr.getPhrasesPerCondition()).toBe(15)
   })
+
+  it('isConditionComplete returns true after all ppc phrases done', () => {
+    const mgr = new ExperimentManager('1', mockConfig)
+    mgr.startCondition(0)
+    for (let p = 0; p < 5; p++) {
+      const phrase = mgr.getCurrentPhrase()
+      for (const ch of phrase) mgr.recordInput(ch)
+      mgr.nextPhrase()
+    }
+    expect(mgr.isConditionComplete()).toBe(true)
+  })
+
+  it('resuming at phraseIndex=4 with ppc=5 completes after one nextPhrase', () => {
+    const mgr = new ExperimentManager('1', mockConfig)
+    mgr.startCondition(0, 4)
+    const phrase = mgr.getCurrentPhrase()
+    for (const ch of phrase) mgr.recordInput(ch)
+    mgr.nextPhrase()
+    expect(mgr.isConditionComplete()).toBe(true)
+  })
 })
