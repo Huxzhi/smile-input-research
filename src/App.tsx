@@ -1,8 +1,11 @@
-import { useState } from 'react'
-import type { AppPage, Language } from './types'
+import { useState, useCallback, useRef, useEffect } from 'react'
+import type { AppPage, Language, EventLog, ExperimenterConfig } from './types'
 import { I18nProvider } from './i18n'
+import { DataStore } from './core/DataStore'
 import { DebugPage } from './pages/DebugPage'
 import { WelcomePage } from './pages/WelcomePage'
+import { ExperimenterConfigPage } from './pages/ExperimenterConfigPage'
+import { TypingTestPage } from './pages/TypingTestPage'
 import { TutorialPage } from './pages/TutorialPage'
 import { ExperimentPage } from './pages/ExperimentPage'
 import { SurveyPage } from './pages/SurveyPage'
@@ -16,46 +19,101 @@ export interface SessionState {
   smileThreshold: number
   gazeOffsetX: number
   gazeOffsetY: number
+  gazeMode: 'tobii' | 'mouse'
+  experimenterName: string
+  experimenterConfig: ExperimenterConfig
 }
 
 export default function App() {
   const [page, setPage] = useState<AppPage>('debug')
   const [session, setSession] = useState<SessionState | null>(null)
   const [debugOffset, setDebugOffset] = useState({ x: 0, y: 0 })
+  const [debugGazeMode, setDebugGazeMode] = useState<'tobii' | 'mouse'>('tobii')
+  const [displayLogs, setDisplayLogs] = useState<EventLog[]>([])
+  const storeRef = useRef(new DataStore())
+
+  useEffect(() => {
+    storeRef.current.init().then(async () => {
+      const recent = await storeRef.current.getRecentLogs(10)
+      setDisplayLogs(recent)
+    })
+  }, [])
 
   const goTo = (p: AppPage) => setPage(p)
+
+  const addLog = useCallback((log: EventLog) => {
+    setDisplayLogs(prev => [log, ...prev].slice(0, 80))
+    storeRef.current.saveLog(log)
+  }, [])
+
+  const clearLogs = useCallback(() => setDisplayLogs([]), [])
 
   return (
     <I18nProvider>
       <div style={{ minHeight: '100vh', background: '#0d1117', color: '#cdd6f4', fontFamily: 'system-ui, sans-serif' }}>
         {page === 'debug' && (
-          <DebugPage onStart={(ox, oy) => { setDebugOffset({ x: ox, y: oy }); goTo('welcome') }} />
+          <DebugPage
+            displayLogs={displayLogs}
+            addLog={addLog}
+            clearLogs={clearLogs}
+            onStart={(ox, oy, mode) => {
+              setDebugOffset({ x: ox, y: oy })
+              setDebugGazeMode(mode)
+              goTo('experimenter-config')
+            }}
+          />
+        )}
+        {page === 'experimenter-config' && (
+          <ExperimenterConfigPage
+            gazeMode={debugGazeMode}
+            addLog={addLog}
+            onNext={(participantId, sessionId, config) => {
+              setSession({
+                participantId,
+                sessionId,
+                language: 'zh',
+                smileCalibPeak: 0,
+                smileThreshold: 0.6,
+                gazeOffsetX: debugOffset.x,
+                gazeOffsetY: debugOffset.y,
+                gazeMode: debugGazeMode,
+                experimenterName: config.experimenterName,
+                experimenterConfig: config,
+              })
+              goTo('welcome')
+            }}
+            onBack={() => goTo('debug')}
+          />
         )}
         {page === 'welcome' && (
-          <WelcomePage onNext={(s) => {
-            setSession({ ...s, gazeOffsetX: debugOffset.x, gazeOffsetY: debugOffset.y })
-            goTo('tutorial')
+          <WelcomePage onNext={(lang) => {
+            setSession(s => s ? { ...s, language: lang } : s)
+            goTo('typing-test')
           }} />
+        )}
+        {page === 'typing-test' && (
+          <TypingTestPage onNext={() => goTo('tutorial')} />
         )}
         {page === 'tutorial' && session && (
           <TutorialPage
             participantId={session.participantId}
             gazeOffsetX={session.gazeOffsetX}
             gazeOffsetY={session.gazeOffsetY}
+            gazeMode={session.gazeMode}
             onNext={(peak, threshold) => {
-              setSession({ ...session, smileCalibPeak: peak, smileThreshold: threshold })
+              setSession(s => s ? { ...s, smileCalibPeak: peak, smileThreshold: threshold } : s)
               goTo('experiment')
             }}
           />
         )}
         {page === 'experiment' && session && (
-          <ExperimentPage session={session} onNext={() => goTo('survey')} />
+          <ExperimentPage session={session} addLog={addLog} onNext={() => goTo('survey')} />
         )}
-        {page === 'survey' && session && (
-          <SurveyPage sessionId={session.sessionId} onNext={() => goTo('export')} />
+        {page === 'survey' && (
+          <SurveyPage onNext={() => goTo('export')} />
         )}
-        {page === 'export' && session && (
-          <ExportPage sessionId={session.sessionId} />
+        {page === 'export' && (
+          <ExportPage />
         )}
       </div>
     </I18nProvider>
