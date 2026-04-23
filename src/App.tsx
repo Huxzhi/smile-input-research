@@ -9,7 +9,7 @@ import { TypingTestPage } from './pages/TypingTestPage'
 import { TutorialPage } from './pages/TutorialPage'
 import { ExperimentPage } from './pages/ExperimentPage'
 import { SurveyPage } from './pages/SurveyPage'
-import { ExportPage } from './pages/ExportPage'
+
 
 export interface SessionState {
   participantId: string
@@ -48,6 +48,18 @@ export default function App() {
 
   const clearLogs = useCallback(() => setDisplayLogs([]), [])
 
+  const exportCSV = useCallback(async () => {
+    const csv = await storeRef.current.exportCSV()
+    if (!csv) return
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `logs_${Date.now()}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [])
+
   return (
     <I18nProvider>
       <div style={{ minHeight: '100vh', background: '#0d1117', color: '#cdd6f4', fontFamily: 'system-ui, sans-serif' }}>
@@ -56,6 +68,7 @@ export default function App() {
             displayLogs={displayLogs}
             addLog={addLog}
             clearLogs={clearLogs}
+            onExport={exportCSV}
             onStart={(ox, oy, mode) => {
               setDebugOffset({ x: ox, y: oy })
               setDebugGazeMode(mode)
@@ -110,10 +123,7 @@ export default function App() {
           <ExperimentPage session={session} addLog={addLog} onNext={() => goTo('survey')} />
         )}
         {page === 'survey' && (
-          <SurveyPage onNext={() => goTo('export')} />
-        )}
-        {page === 'export' && (
-          <ExportPage />
+          <SurveyPage onNext={() => goTo('debug')} />
         )}
       </div>
     </I18nProvider>

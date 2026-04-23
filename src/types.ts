@@ -9,7 +9,6 @@ export type AppPage =
   | 'tutorial'
   | 'experiment'
   | 'survey'
-  | 'export'
 
 export interface ConditionConfig {
   layout: Layout

@@ -17,13 +17,14 @@ const PANEL_W  = 212
 const OFFSET_STEP = 0.01
 
 interface Props {
+  onExport: () => void
   displayLogs: EventLog[]
   addLog: (log: EventLog) => void
   clearLogs: () => void
   onStart: (offsetX: number, offsetY: number, gazeMode: 'tobii' | 'mouse') => void
 }
 
-export function DebugPage({ displayLogs, addLog: addLogProp, clearLogs, onStart }: Props) {
+export function DebugPage({ onExport, displayLogs, addLog: addLogProp, clearLogs, onStart }: Props) {
   const { t, lang, setLang } = useI18n()
   const [layout, setLayout]           = useState<Layout>('qwerty')
   const [offsetX, setOffsetX]         = useState(0)
@@ -309,6 +310,7 @@ export function DebugPage({ displayLogs, addLog: addLogProp, clearLogs, onStart 
             <div style={divider} />
             <button onClick={() => { const next = randomPhrase(); setPhrase(next); setTypedChars([]); charIndexRef.current = 0; addLog({ ts: Date.now(), type: 'phrase_show', description: `换词: "${next}"` }) }} style={smallBtn}>换词</button>
             <button onClick={clearLogs} style={smallBtn}>清空log</button>
+            <button onClick={onExport} style={{ ...smallBtn, color: '#50fa7b', borderColor: '#50fa7b33' }}>导出CSV</button>
           </div>
 
           {/* Log table */}
