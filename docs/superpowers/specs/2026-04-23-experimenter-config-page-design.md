@@ -101,10 +101,53 @@ constructor(participantId: string, config?: ExperimenterConfig)
 - Remove `onNext(session)` signature; change to `onNext(language: Language)`
 - Keep: language switcher buttons, welcome title, start button
 
+## Config Start Log Event
+
+When the experimenter clicks "开始实验", immediately fire an `experiment_start` `EventLog` entry that captures the full configuration. This entry is passed to `addLog` in `App.tsx` (same pipeline as all other log entries: displayed in debug panel + persisted to IndexedDB).
+
+### `EventLog` extended fields
+
+```ts
+// config snapshot — present on experiment_start only:
+experimenterName?: string
+conditionOrder?: string        // JSON.stringify(ConditionConfig[])
+startConditionIndex?: number
+startPhraseIndex?: number
+phrasesPerCondition?: number
+gazeMode?: 'tobii' | 'mouse'
+language?: Language
+```
+
+`conditionOrder` is stored as a JSON string so the flat `EventLog` structure is preserved and CSV export remains straightforward (one value per cell).
+
+### Log entry shape (experiment_start)
+
+```ts
+{
+  sessionId,
+  ts: Date.now(),
+  type: 'experiment_start',
+  description: `实验者:${experimenterName} P${participantId} 条件顺序:[qwerty/dwell,qwerty/blink,...] 起始:条件${startConditionIndex+1}语句${startPhraseIndex+1} 每条件${phrasesPerCondition}句`,
+  participantId,
+  experimenterName,
+  conditionOrder: JSON.stringify(conditionOrder),
+  startConditionIndex,
+  startPhraseIndex,
+  phrasesPerCondition,
+  gazeMode,
+  language,
+}
+```
+
+### Where it fires
+
+`ExperimenterConfigPage` calls `props.addLog(entry)` right before calling `props.onNext(config)`. No changes needed inside `ExperimentPage` for this event; the existing per-condition `experiment_start` events remain separate.
+
 ## DataStore / CSV Export
 
 - `sessions` table: add `experimenterName` column
-- `exportCSV` includes `experimenterName` in the sessions CSV
+- `events` table: the new fields (`experimenterName`, `conditionOrder`, `startConditionIndex`, `startPhraseIndex`, `phrasesPerCondition`, `gazeMode`, `language`) are added to `EventLog` as optional — existing rows without them are unaffected
+- `exportCSV` includes `experimenterName` in the sessions CSV; the new `EventLog` fields appear as additional columns in the events CSV
 
 ## Constraints
 
