@@ -32,7 +32,7 @@ tlxPhysical?:         number
 tlxTemporal?:         number
 tlxPerformance?:      number
 tlxEffort?:           number
-tlxFrustration?:      number
+tlxHappiness?:        number
 // smile-specific (1–5, only present when inputMethod === 'smile')
 smileNaturalness?:    number
 smileEmbarrassment?:  number
@@ -58,7 +58,7 @@ interface ConditionSurveyAnswers {
   tlxTemporal: number
   tlxPerformance: number
   tlxEffort: number
-  tlxFrustration: number
+  tlxHappiness: number
   smileNaturalness: number | null    // null when inputMethod !== 'smile'
   smileEmbarrassment: number | null
 }
@@ -139,7 +139,7 @@ Add to `src/i18n/zh.json`, `en.json`, `ja.json`:
     "temporal":    { "label": "时间压力",   "lo": "极低", "hi": "极高" },
     "performance": { "label": "表现满意度", "lo": "非常满意", "hi": "非常不满意" },
     "effort":      { "label": "努力程度",   "lo": "极低", "hi": "极高" },
-    "frustration": { "label": "挫败感",     "lo": "极低", "hi": "极高" }
+    "happiness":   { "label": "愉悦感",     "lo": "极低", "hi": "极高" }
   },
   "smileNaturalness":   "用微笑选字让我感到不自然",
   "smileEmbarrassment": "如果在公开场合使用，我会感到尴尬",
@@ -173,7 +173,7 @@ Add to `src/i18n/zh.json`, `en.json`, `ja.json`:
 | temporal | 你感到时间压力有多大？ | 极低 | 极高 |
 | performance | 你对自己的表现满意吗？ | 非常满意 | 非常不满意 |
 | effort | 为了完成任务你付出了多少努力？ | 极低 | 极高 |
-| frustration | 你感到沮丧或烦躁吗？ | 极低 | 极高 |
+| happiness | 完成这项任务让你感到高兴吗？ | 极低 | 极高 |
 
 ### Smile-specific (5-point Likert, only for smile conditions)
 
