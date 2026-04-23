@@ -9,6 +9,9 @@ import { GazeCursor } from '../components/GazeCursor'
 import { FaceDebugPanel } from '../components/FaceDebugPanel'
 import { QwertyKeyboard, computeQwertyKeySize } from '../components/keyboards/QwertyKeyboard'
 import { OptiKeyboard, computeOptiKeySize } from '../components/keyboards/OptiKeyboard'
+import { ConditionSurvey, type ConditionSurveyAnswers } from '../components/ConditionSurvey'
+
+type ExperimentPhase = 'running' | 'condition-survey' | 'resting'
 
 interface Props {
   session: SessionState
@@ -23,7 +26,7 @@ const METHOD_ZH: Record<string, string> = { dwell: '注视', smile: '微笑', bl
 
 export function ExperimentPage({ session, addLog: addLogProp, onNext }: Props) {
   const { t } = useI18n()
-  const [resting, setResting] = useState(false)
+  const [phase, setPhase] = useState<ExperimentPhase>('running')
   const [restSecsLeft, setRestSecsLeft] = useState(REST_SECS)
   const [conditionIndex, setConditionIndex] = useState(session.experimenterConfig.startConditionIndex)
   const [, forceUpdate] = useState(0)
@@ -99,8 +102,7 @@ export function ExperimentPage({ session, addLog: addLogProp, onNext }: Props) {
         if (conditionIndex + 1 >= manager.getConditionOrder().length) {
           onNext()
         } else {
-          setResting(true)
-          setRestSecsLeft(REST_SECS)
+          setPhase('condition-survey')
         }
       }
     })
@@ -110,21 +112,21 @@ export function ExperimentPage({ session, addLog: addLogProp, onNext }: Props) {
 
   // Rest timer
   useEffect(() => {
-    if (!resting) return
+    if (phase !== 'resting') return
     const timer = setInterval(() => {
       setRestSecsLeft(s => {
-        if (s <= 1) { clearInterval(timer); setResting(false); setConditionIndex(i => i + 1); return REST_SECS }
+        if (s <= 1) { clearInterval(timer); setPhase('running'); setConditionIndex(i => i + 1); return REST_SECS }
         return s - 1
       })
     }, 1000)
     return () => clearInterval(timer)
-  }, [resting])
+  }, [phase])
 
   const skipPhrase = () => {
     manager.nextPhrase()
     if (manager.isConditionComplete()) {
       if (conditionIndex + 1 >= manager.getConditionOrder().length) { onNext() }
-      else { setResting(true); setRestSecsLeft(REST_SECS) }
+      else { setPhase('condition-survey') }
     } else {
       addLog({ ts: Date.now(), type: 'phrase_show', description: `[跳过] 短语 ${manager.getPhraseIndex() + 1}/${ppc}: "${manager.getCurrentPhrase()}"`, layout: condition.layout, isTutorial: false })
       forceUpdate(n => n + 1)
@@ -133,7 +135,27 @@ export function ExperimentPage({ session, addLog: addLogProp, onNext }: Props) {
 
   const skipCondition = () => {
     if (conditionIndex + 1 >= manager.getConditionOrder().length) { onNext() }
-    else { setResting(true); setRestSecsLeft(REST_SECS) }
+    else { setRestSecsLeft(REST_SECS); setPhase('resting') }
+  }
+
+  const handleSurveySubmit = (answers: ConditionSurveyAnswers) => {
+    addLog({
+      ts: Date.now(),
+      type: 'condition_survey',
+      description: `条件 ${conditionIndex + 1} 问卷: ${condition.layout} / ${condition.inputMethod}`,
+      layout: condition.layout,
+      inputMethod: condition.inputMethod,
+      tlxMental:      answers.tlxMental,
+      tlxPhysical:    answers.tlxPhysical,
+      tlxTemporal:    answers.tlxTemporal,
+      tlxPerformance: answers.tlxPerformance,
+      tlxEffort:      answers.tlxEffort,
+      tlxHappiness:   answers.tlxHappiness,
+      smileNaturalness:   answers.smileNaturalness ?? undefined,
+      smileEmbarrassment: answers.smileEmbarrassment ?? undefined,
+    })
+    setRestSecsLeft(REST_SECS)
+    setPhase('resting')
   }
 
   // ── Left sidebar (always visible) ────────────────────────────────────────
@@ -144,8 +166,8 @@ export function ExperimentPage({ session, addLog: addLogProp, onNext }: Props) {
         实验进度
       </div>
       {conditionOrder.map((cond, i) => {
-        const isActive = i === conditionIndex && !resting
-        const isDone = i < conditionIndex || (i === conditionIndex && resting && manager.isConditionComplete())
+        const isActive = i === conditionIndex && phase === 'running'
+        const isDone = i < conditionIndex || (i === conditionIndex && phase !== 'running' && manager.isConditionComplete())
         return (
           <div key={i} style={{
             padding: '6px 8px', borderRadius: 6, marginBottom: 3,
@@ -206,14 +228,23 @@ export function ExperimentPage({ session, addLog: addLogProp, onNext }: Props) {
       {sidebar}
 
       {/* ── Rest screen ──────────────────────────────────────────────────── */}
-      {resting ? (
+      {phase === 'condition-survey' ? (
+        <div style={{ paddingLeft: SIDEBAR_W }}>
+          <ConditionSurvey
+            conditionIndex={conditionIndex}
+            layout={condition.layout}
+            inputMethod={condition.inputMethod}
+            onSubmit={handleSurveySubmit}
+          />
+        </div>
+      ) : phase === 'resting' ? (
         <div style={{ ...centerStyle, paddingLeft: SIDEBAR_W }}>
           <h2 style={{ color: '#f1fa8c' }}>{t('experiment.rest')}</h2>
           <p style={{ color: '#aaa', fontSize: 18 }}>
             {t('experiment.restMessage', { seconds: String(restSecsLeft) })}
           </p>
           <button
-            onClick={() => { setResting(false); setConditionIndex(i => i + 1) }}
+            onClick={() => { setPhase('running'); setConditionIndex(i => i + 1) }}
             style={actionBtn}
           >
             {t('experiment.restSkip')}
