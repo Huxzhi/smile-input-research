@@ -186,27 +186,6 @@ export function ExperimentPage({ session, addLog: addLogProp, onNext }: Props) {
     </div>
   )
 
-  // ── Rest screen ───────────────────────────────────────────────────────────
-  if (resting) {
-    return (
-      <>
-        {sidebar}
-        <div style={{ ...centerStyle, paddingLeft: SIDEBAR_W }}>
-          <h2 style={{ color: '#f1fa8c' }}>{t('experiment.rest')}</h2>
-          <p style={{ color: '#aaa', fontSize: 18 }}>
-            {t('experiment.restMessage', { seconds: String(restSecsLeft) })}
-          </p>
-          <button
-            onClick={() => { setResting(false); setConditionIndex(i => i + 1) }}
-            style={actionBtn}
-          >
-            {t('experiment.restSkip')}
-          </button>
-        </div>
-      </>
-    )
-  }
-
   const ctrl = controllerRef.current
   const targetChar = manager.getTargetChar()
   const phrase = manager.getCurrentPhrase()
@@ -220,71 +199,90 @@ export function ExperimentPage({ session, addLog: addLogProp, onNext }: Props) {
 
   return (
     <>
+      {/* video must stay mounted through rest screens so FaceDetector keeps its stream */}
       <video ref={videoRef} style={{ display: 'none' }} />
       <GazeCursor ref={cursorRef} />
       <FaceDebugPanel videoRef={videoRef} faceEvent={faceEvent} gaze={gaze} />
       {sidebar}
 
-      {/* Experimenter badge */}
-      <div style={{
-        position: 'fixed', top: 8, right: 12, zIndex: 200,
-        display: 'flex', gap: 8, alignItems: 'center',
-        fontSize: 11, color: '#555',
-      }}>
-        <span>实验者: {session.experimenterName}</span>
-        <span style={{ color: '#333' }}>|</span>
-        <span>P{session.participantId}</span>
-        <span style={{ color: '#333' }}>|</span>
-        <span>条件 {conditionIndex + 1}/{manager.getConditionOrder().length}</span>
-      </div>
-
-      {/* Main content, offset by sidebar */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: '100vh', paddingTop: 20, paddingLeft: SIDEBAR_W, gap: 12 }}>
-
-        {/* Condition info + debug buttons */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: 12, color: '#555', letterSpacing: 1 }}>
-            {t('experiment.condition', { index: String(conditionIndex + 1) })}
-            {' — '}
-            {condition.layout.toUpperCase()} / {METHOD_ZH[condition.inputMethod]}
-            {' — '}
-            短语 {manager.getPhraseIndex() + 1}/{ppc}
-          </span>
-          <button onClick={skipPhrase} style={debugSkipBtn}>跳过短语</button>
-          <button onClick={skipCondition} style={debugSkipBtn}>跳过条件</button>
+      {/* ── Rest screen ──────────────────────────────────────────────────── */}
+      {resting ? (
+        <div style={{ ...centerStyle, paddingLeft: SIDEBAR_W }}>
+          <h2 style={{ color: '#f1fa8c' }}>{t('experiment.rest')}</h2>
+          <p style={{ color: '#aaa', fontSize: 18 }}>
+            {t('experiment.restMessage', { seconds: String(restSecsLeft) })}
+          </p>
+          <button
+            onClick={() => { setResting(false); setConditionIndex(i => i + 1) }}
+            style={actionBtn}
+          >
+            {t('experiment.restSkip')}
+          </button>
         </div>
-
-        {/* Phrase display */}
-        <div style={{ fontSize: 20, letterSpacing: 3, fontFamily: 'monospace', padding: '10px 20px', background: '#111', borderRadius: 6 }}>
-          {phrase.split('').map((ch, i) => (
-            <span key={i} style={{
-              color: i < charIndex ? '#50fa7b' : i === charIndex ? '#fff' : '#444',
-              fontWeight: i === charIndex ? 'bold' : 'normal',
-              textDecoration: i === charIndex ? 'underline' : 'none',
-            }}>
-              {ch === ' ' ? ' ' : ch}
-            </span>
-          ))}
-        </div>
-
-        {/* Smile score indicator */}
-        {condition.inputMethod === 'smile' && ctrl && (
-          <div style={{ fontSize: 13, color: '#f1fa8c' }}>
-            😊 {(ctrl.getSmileScore() * 100).toFixed(0)}%
-            {ctrl.getLockedKey() && (
-              <span style={{ marginLeft: 12 }}>🔒 {ctrl.getLockedKey()}</span>
-            )}
+      ) : (
+        <>
+          {/* Experimenter badge */}
+          <div style={{
+            position: 'fixed', top: 8, right: 12, zIndex: 200,
+            display: 'flex', gap: 8, alignItems: 'center',
+            fontSize: 11, color: '#555',
+          }}>
+            <span>实验者: {session.experimenterName}</span>
+            <span style={{ color: '#333' }}>|</span>
+            <span>P{session.participantId}</span>
+            <span style={{ color: '#333' }}>|</span>
+            <span>条件 {conditionIndex + 1}/{manager.getConditionOrder().length}</span>
           </div>
-        )}
 
-        {/* Keyboard */}
-        {ctrl && (
-          condition.layout === 'qwerty'
-            ? <QwertyKeyboard controller={ctrl} gaze={gaze} targetChar={targetChar} onKeyRect={handleKeyRect} keySize={keySize} />
-            : <OptiKeyboard controller={ctrl} gaze={gaze} targetChar={targetChar} onKeyRect={handleKeyRect} keySize={keySize} />
-        )}
+          {/* Main content, offset by sidebar */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: '100vh', paddingTop: 20, paddingLeft: SIDEBAR_W, gap: 12 }}>
 
-      </div>
+            {/* Condition info + debug buttons */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: 12, color: '#555', letterSpacing: 1 }}>
+                {t('experiment.condition', { index: String(conditionIndex + 1) })}
+                {' — '}
+                {condition.layout.toUpperCase()} / {METHOD_ZH[condition.inputMethod]}
+                {' — '}
+                短语 {manager.getPhraseIndex() + 1}/{ppc}
+              </span>
+              <button onClick={skipPhrase} style={debugSkipBtn}>跳过短语</button>
+              <button onClick={skipCondition} style={debugSkipBtn}>跳过条件</button>
+            </div>
+
+            {/* Phrase display */}
+            <div style={{ fontSize: 20, letterSpacing: 3, fontFamily: 'monospace', padding: '10px 20px', background: '#111', borderRadius: 6 }}>
+              {phrase.split('').map((ch, i) => (
+                <span key={i} style={{
+                  color: i < charIndex ? '#50fa7b' : i === charIndex ? '#fff' : '#444',
+                  fontWeight: i === charIndex ? 'bold' : 'normal',
+                  textDecoration: i === charIndex ? 'underline' : 'none',
+                }}>
+                  {ch === ' ' ? ' ' : ch}
+                </span>
+              ))}
+            </div>
+
+            {/* Smile score indicator */}
+            {condition.inputMethod === 'smile' && ctrl && (
+              <div style={{ fontSize: 13, color: '#f1fa8c' }}>
+                😊 {(ctrl.getSmileScore() * 100).toFixed(0)}%
+                {ctrl.getLockedKey() && (
+                  <span style={{ marginLeft: 12 }}>🔒 {ctrl.getLockedKey()}</span>
+                )}
+              </div>
+            )}
+
+            {/* Keyboard */}
+            {ctrl && (
+              condition.layout === 'qwerty'
+                ? <QwertyKeyboard controller={ctrl} gaze={gaze} targetChar={targetChar} onKeyRect={handleKeyRect} keySize={keySize} />
+                : <OptiKeyboard controller={ctrl} gaze={gaze} targetChar={targetChar} onKeyRect={handleKeyRect} keySize={keySize} />
+            )}
+
+          </div>
+        </>
+      )}
     </>
   )
 }
@@ -310,4 +308,3 @@ const debugSkipBtn: React.CSSProperties = {
   padding: '2px 8px', borderRadius: 4, border: '1px solid #333',
   background: 'transparent', color: '#666', fontSize: 11, cursor: 'pointer',
 }
-
