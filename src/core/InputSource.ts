@@ -82,9 +82,12 @@ export class InputSource {
         .then(stream => {
           this.stream = stream
           videoEl.srcObject = stream
-          videoEl.play()
-          this.fd.start(videoEl)
-          this.cameraStatusCbs.forEach(cb => cb(true))
+          videoEl.muted = true
+          videoEl.playsInline = true
+          return videoEl.play().then(() => {
+            this.fd.start(videoEl)
+            this.cameraStatusCbs.forEach(cb => cb(true))
+          })
         })
         .catch(() => this.cameraStatusCbs.forEach(cb => cb(false)))
     } else {
