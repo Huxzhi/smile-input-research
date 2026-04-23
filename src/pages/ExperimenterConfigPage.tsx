@@ -115,7 +115,11 @@ export function ExperimenterConfigPage({ gazeMode, addLog, onNext, onBack }: Pro
             min={1}
             max={30}
             value={ppc}
-            onChange={e => setPpc(Math.max(1, Math.min(30, Number(e.target.value))))}
+            onChange={e => {
+              const newPpc = Math.max(1, Math.min(30, Number(e.target.value)))
+              setPpc(newPpc)
+              setStartPhrase(s => Math.min(s, newPpc))
+            }}
             style={{ ...inputStyle, width: 72 }}
           />
         </div>
@@ -153,7 +157,7 @@ export function ExperimenterConfigPage({ gazeMode, addLog, onNext, onBack }: Pro
             const isStart = i === startIdx
             return (
               <div
-                key={i}
+                key={`${cond.layout}-${cond.inputMethod}`}
                 onClick={() => { setStartIdx(i); setStartPhrase(1) }}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10,
