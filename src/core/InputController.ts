@@ -1,5 +1,5 @@
 import type { GazePoint, FaceEvent, InputFiredEvent, InputMethod } from '../types'
-import { DWELL_MS, BLINK_MAX_MS, BLINK_COOLDOWN_MS, SMILE_HOLD_MS, SMILE_LOCK_MS } from '../types'
+import { DWELL_MS, BLINK_MIN_MS, BLINK_MAX_MS, BLINK_COOLDOWN_MS, SMILE_HOLD_MS, SMILE_LOCK_MS } from '../types'
 
 type InputCallback = (event: InputFiredEvent) => void
 
@@ -28,7 +28,9 @@ export class InputController {
 
   constructor(
     private method: InputMethod,
-    private smileThreshold: number = 0.6
+    private smileThreshold: number = 0.6,
+    private blinkMinMs: number = BLINK_MIN_MS,
+    private blinkMaxMs: number = BLINK_MAX_MS,
   ) {}
 
   onInput(cb: InputCallback) {
@@ -88,11 +90,15 @@ export class InputController {
     }
   }
 
-  // Called from GazeLayer when Tobii provides eye_open.
-  // Takes priority over MediaPipe blink detection when available.
+  // Called with Tobii eye_open data or mouse button simulation.
+  // Once called, suppresses camera-based blink detection for this controller instance.
   feedEyeOpen(eyeOpen: boolean) {
     if (this.method !== 'blink') return
     this.usingTobiiEyeOpen = true
+    this.processEyeOpen(eyeOpen)
+  }
+
+  private processEyeOpen(eyeOpen: boolean) {
     const now = Date.now()
     const wasOpen = this.lastEyeOpen
     this.lastEyeOpen = eyeOpen
@@ -101,9 +107,9 @@ export class InputController {
       this.blinkStart = now
     } else if (eyeOpen && !wasOpen && this.blinkStart !== null) {
       const dur = now - this.blinkStart
-      if (dur < BLINK_MAX_MS && this.focusedKey && this.focusedGaze) {
+      if (dur >= this.blinkMinMs && dur < this.blinkMaxMs && this.focusedKey && this.focusedGaze) {
         this.blinkCooldownUntil = now + BLINK_COOLDOWN_MS
-        this.fire(this.focusedKey, this.focusedGaze, null)
+        this.fire(this.focusedKey, this.focusedGaze, null, dur)
       }
       this.blinkStart = null
     }
@@ -113,7 +119,12 @@ export class InputController {
     this.lastFace = face
     const now = Date.now()
 
-    // Blink is detected exclusively via Tobii (feedEyeOpen). No camera fallback.
+    // Camera blink detection — disabled once Tobii/mouse feeds eye_open
+    if (this.method === 'blink' && !this.usingTobiiEyeOpen) {
+      const BLINK_THRESHOLD = 0.5
+      const eyeOpen = Math.max(face.blinkLeft, face.blinkRight) < BLINK_THRESHOLD
+      this.processEyeOpen(eyeOpen)
+    }
 
     if (this.method === 'smile') {
       const smiling = face.smileScore >= this.smileThreshold
@@ -148,15 +159,20 @@ export class InputController {
     return this.lockedKey
   }
 
-  private fire(key: string, gaze: GazePoint, dwellDuration: number | null) {
+  private fire(key: string, gaze: GazePoint, dwellDuration: number | null, blinkDuration: number | null = null) {
     const face = this.lastFace
     const event: InputFiredEvent = {
       key,
       gazeX: gaze.x,
       gazeY: gaze.y,
-      blinkLeft: 0,   // blink detected via Tobii feedEyeOpen, not camera
-      blinkRight: 0,
-      smileScore: face?.smileScore ?? 0,
+      blinkLeft:       face?.blinkLeft       ?? 0,
+      blinkRight:      face?.blinkRight      ?? 0,
+      blinkDuration,
+      mouthSmileLeft:  face?.mouthSmileLeft  ?? 0,
+      mouthSmileRight: face?.mouthSmileRight ?? 0,
+      eyeSquintLeft:   face?.eyeSquintLeft   ?? 0,
+      eyeSquintRight:  face?.eyeSquintRight  ?? 0,
+      smileScore:      face?.smileScore      ?? 0,
       dwellDuration,
       ts: Date.now(),
     }

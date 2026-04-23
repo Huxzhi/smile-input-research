@@ -8,6 +8,8 @@ const LERP = 0.15
 export class GazeLayer {
   private ws: WebSocket | null = null
   private callbacks: GazeCallback[] = []
+  private errorCbs: Array<() => void> = []
+  private mouseCleanup: (() => void) | null = null
 
   // Smooth cursor state
   private targetX = 0
@@ -29,8 +31,14 @@ export class GazeLayer {
     this.offsetY = dy
   }
 
+  onError(cb: () => void) {
+    this.errorCbs.push(cb)
+    return () => { this.errorCbs = this.errorCbs.filter(c => c !== cb) }
+  }
+
   connect() {
     this.ws = new WebSocket(this.url)
+    this.ws.onerror = () => { this.errorCbs.forEach(cb => cb()) }
     this.ws.onmessage = (e) => {
       try {
         const raw = JSON.parse(e.data)
@@ -48,10 +56,66 @@ export class GazeLayer {
     this.startRender()
   }
 
+  connectMouse() {
+    let leftDown = false
+    let rightDown = false
+    let lastX = 0.5
+    let lastY = 0.5
+
+    const emit = () => {
+      this.handleMessage({
+        x: lastX,
+        y: lastY,
+        ts: Date.now(),
+        eyeOpen: !leftDown && !rightDown,
+        leftOpen: !leftDown,
+        rightOpen: !rightDown,
+      })
+    }
+
+    const onMove = (e: MouseEvent) => {
+      lastX = e.clientX / window.innerWidth
+      lastY = e.clientY / window.innerHeight
+      emit()
+    }
+    const onDown = (e: MouseEvent) => {
+      if (e.button === 0) leftDown = true
+      else if (e.button === 2) rightDown = true
+      emit()
+    }
+    const onUp = (e: MouseEvent) => {
+      if (e.button === 0) leftDown = false
+      else if (e.button === 2) rightDown = false
+      emit()
+    }
+    const onContext = (e: Event) => e.preventDefault()
+
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mousedown', onDown)
+    window.addEventListener('mouseup', onUp)
+    window.addEventListener('contextmenu', onContext)
+
+    this.mouseCleanup = () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mousedown', onDown)
+      window.removeEventListener('mouseup', onUp)
+      window.removeEventListener('contextmenu', onContext)
+    }
+    this.startRender()
+  }
+
   disconnect() {
     this.ws?.close()
     this.ws = null
+    if (this.mouseCleanup) {
+      this.mouseCleanup()
+      this.mouseCleanup = null
+    }
     this.stopRender()
+  }
+
+  isMouseMode(): boolean {
+    return this.mouseCleanup !== null
   }
 
   /** Bind a DOM element whose transform GazeLayer will drive each frame. */

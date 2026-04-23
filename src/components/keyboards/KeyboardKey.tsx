@@ -3,6 +3,7 @@ import type { InputController } from '../../core/InputController'
 
 interface Props {
   label: string
+  rectKey?: string  // unique hit-test id; defaults to label (use when label appears multiple times)
   controller: InputController
   onKeyRect: (key: string, rect: DOMRect) => void
   isTarget?: boolean
@@ -10,14 +11,14 @@ interface Props {
   style?: React.CSSProperties
 }
 
-export function KeyboardKey({ label, controller, onKeyRect, isTarget, size = 72, style }: Props) {
+export function KeyboardKey({ label, rectKey, controller, onKeyRect, isTarget, size = 72, style }: Props) {
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (ref.current) {
-      onKeyRect(label, ref.current.getBoundingClientRect())
+      onKeyRect(rectKey ?? label, ref.current.getBoundingClientRect())
     }
-  }, [label, onKeyRect, size])
+  }, [label, rectKey, onKeyRect, size])
 
   const progress = controller.getDwellProgress(label)
   const isLocked = controller.getLockedKey() === label

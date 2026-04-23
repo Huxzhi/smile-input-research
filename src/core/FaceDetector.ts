@@ -7,7 +7,6 @@ export class FaceDetector {
   private landmarker: FaceLandmarker | null = null
   private callbacks: FaceCallback[] = []
   private animFrame: number | null = null
-  private _lastDump = 0
 
   async init() {
     const vision = await FilesetResolver.forVisionTasks(
@@ -37,34 +36,33 @@ export class FaceDetector {
         const get = (name: string) =>
           shapes.find(s => s.categoryName === name)?.score ?? 0
 
-        // Debug: log top active blendshapes every 2s to find correct names
-        if (process.env.NODE_ENV !== 'production') {
-          const now = Date.now()
-          if (now - this._lastDump > 2000) {
-            this._lastDump = now
-            const top = [...shapes]
-              .filter(s => s.score > 0.05)
-              .sort((a, b) => b.score - a.score)
-              .slice(0, 10)
-              .map(s => `${s.categoryName}=${s.score.toFixed(3)}`)
-            console.log('[FaceDetector]', top.join('  '))
-          }
-        }
+        const mouthSmileLeft  = get('mouthSmileLeft')
+        const mouthSmileRight = get('mouthSmileRight')
+        const mouthSmile = (mouthSmileLeft + mouthSmileRight) / 2
 
-        const mouthSmile = (get('mouthSmileLeft') + get('mouthSmileRight')) / 2
         // eyeSquintLeft/Right = lower eyelid rises during genuine (Duchenne) smiles
         // cheekSquintLeft/Right is a fallback — often 0 in MediaPipe
-        const eyeSquint   = (get('eyeSquintLeft')   + get('eyeSquintRight'))   / 2
-        const cheekSquint = (get('cheekSquintLeft')  + get('cheekSquintRight')) / 2
-        const duchenne = Math.max(eyeSquint, cheekSquint)
+        const eyeSquintLeft   = get('eyeSquintLeft')
+        const eyeSquintRight  = get('eyeSquintRight')
+        const cheekSquintAvg  = (get('cheekSquintLeft') + get('cheekSquintRight')) / 2
+        const duchenne = Math.max((eyeSquintLeft + eyeSquintRight) / 2, cheekSquintAvg)
 
         // Weighted: mouth corners primary, Duchenne eye marker secondary
         const smileScore = mouthSmile * 0.65 + duchenne * 0.35
 
+        const blinkLeft  = get('eyeBlinkLeft')
+        const blinkRight = get('eyeBlinkRight')
+
         const event: FaceEvent = {
           smileScore,
           mouthSmile,
-          cheekSquint: duchenne,   // expose the best available Duchenne score
+          mouthSmileLeft,
+          mouthSmileRight,
+          cheekSquint: duchenne,
+          eyeSquintLeft,
+          eyeSquintRight,
+          blinkLeft,
+          blinkRight,
           ts: Date.now(),
           landmarks: result.faceLandmarks?.[0],
         }

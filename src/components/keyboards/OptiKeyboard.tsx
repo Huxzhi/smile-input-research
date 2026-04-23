@@ -40,6 +40,7 @@ export function OptiKeyboard({ controller, gaze: _gaze, targetChar, onKeyRect, k
             <KeyboardKey
               key={`${ri}-${ki}`}
               label={key}
+              rectKey={`${key}:${ri}:${ki}`}
               controller={controller}
               onKeyRect={handleRect}
               size={keySize}
