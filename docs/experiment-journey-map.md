@@ -16,17 +16,17 @@ flowchart TD
     E[打字热身\n参与者熟悉键盘布局]:::par
     F[教程 + 微笑校准\n· 3 秒微笑校准\n· 注视练习 e/t/a\n· 眨眼练习 e/t/a\n· 微笑练习 e/t/a]:::par
 
-    subgraph LOOP ["实验循环（6 个条件）"]
+    subgraph LOOP [实验循环 6个条件]
         direction TB
         G[开始条件 N\n布局: QWERTY / OPTI\n方式: 注视 / 眨眼 / 微笑]:::sys
         H[参与者输入短语\n每条件 N 条\n实时记录每次按键]:::par
-        I[条件结束\nNASA-TLX 问卷\n脑力/体力/时间/表现/努力/愉悦\n😊 smile 条件额外 2 题]:::survey
-        J{最后一个\n条件?}:::sys
+        I[条件结束\nNASA-TLX 问卷\n脑力/体力/时间/表现/努力/愉悦\nsmile 条件额外 2 题]:::survey
+        J{最后一个条件?}:::sys
         K[休息屏\n60 秒倒计时\n可提前跳过]:::par
     end
 
     L[最终问卷\nStep 1: PANAS 情绪量表\nStep 2: 输入方式偏好排序\nStep 3: 年龄/性别/眼部情况]:::survey
-    M[调试面板\n点击"导出 CSV"\n下载全部日志数据]:::exp
+    M[调试面板\n点击导出 CSV\n下载全部日志数据]:::exp
     N([实验结束]):::exp
 
     A --> B --> C --> D --> E --> F --> G
