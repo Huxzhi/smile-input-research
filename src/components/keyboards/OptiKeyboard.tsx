@@ -9,7 +9,7 @@ const ROWS = [
   ['G', 'S', 'I', 'T', 'O', 'SPACE'],
   ['SPACE', 'A', 'E', 'H', 'N', 'B'],
   ['V', 'R', 'D', 'L', 'U', 'SPACE'],
-  ['W', 'J', 'SPACE', 'P', 'Y', 'X'],
+  ['W', 'J', 'BACKSPACE', 'P', 'Y', 'X'],
 ]
 
 const GAP = 8
@@ -27,9 +27,10 @@ interface Props {
   targetChar: string
   onKeyRect: (key: string, rect: DOMRect) => void
   keySize?: number
+  showTarget?: boolean  // highlight target key; true in tutorial, false in experiment
 }
 
-export function OptiKeyboard({ controller, gaze: _gaze, targetChar, onKeyRect, keySize = 72 }: Props) {
+export function OptiKeyboard({ controller, gaze: _gaze, targetChar, onKeyRect, keySize = 72, showTarget = false }: Props) {
   const handleRect = useCallback(onKeyRect, [onKeyRect])
 
   return (
@@ -44,10 +45,10 @@ export function OptiKeyboard({ controller, gaze: _gaze, targetChar, onKeyRect, k
               controller={controller}
               onKeyRect={handleRect}
               size={keySize}
-              isTarget={
+              isTarget={showTarget && (
                 key.toLowerCase() === targetChar ||
                 (key === 'SPACE' && targetChar === ' ')
-              }
+              )}
             />
           ))}
         </div>

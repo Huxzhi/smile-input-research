@@ -24,9 +24,10 @@ interface Props {
   targetChar: string
   onKeyRect: (key: string, rect: DOMRect) => void
   keySize?: number
+  showTarget?: boolean  // highlight target key; true in tutorial, false in experiment
 }
 
-export function QwertyKeyboard({ controller, gaze: _gaze, targetChar, onKeyRect, keySize = 72 }: Props) {
+export function QwertyKeyboard({ controller, gaze: _gaze, targetChar, onKeyRect, keySize = 72, showTarget = false }: Props) {
   const handleRect = useCallback(onKeyRect, [onKeyRect])
   const stagger = [0, Math.round(keySize * 0.5), Math.round(keySize * 1.0)]
 
@@ -41,10 +42,10 @@ export function QwertyKeyboard({ controller, gaze: _gaze, targetChar, onKeyRect,
               controller={controller}
               onKeyRect={handleRect}
               size={keySize}
-              isTarget={
+              isTarget={showTarget && (
                 key.toLowerCase() === targetChar ||
                 (key === 'SPACE' && targetChar === ' ')
-              }
+              )}
               style={
                 key === 'BACKSPACE' ? { width: Math.round(keySize * 1.5) } :
                 key === 'SPACE' ? { width: Math.round(keySize * 2.5) } :

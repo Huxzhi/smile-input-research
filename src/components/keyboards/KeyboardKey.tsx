@@ -6,7 +6,7 @@ interface Props {
   rectKey?: string  // unique hit-test id; defaults to label (use when label appears multiple times)
   controller: InputController
   onKeyRect: (key: string, rect: DOMRect) => void
-  isTarget?: boolean
+  isTarget?: boolean  // highlight this key as the current target (tutorial only)
   size?: number
   style?: React.CSSProperties
 }
@@ -43,7 +43,7 @@ export function KeyboardKey({ label, rectKey, controller, onKeyRect, isTarget, s
         background: isTarget ? '#1a3a5c' : '#1e1e3e',
         border: `2px solid ${isLocked ? '#f1fa8c' : isTarget ? '#50fa7b' : '#333'}`,
         borderRadius,
-        color: isTarget ? '#50fa7b' : '#aaa',
+        color: isTarget ? '#50fa7b' : '#cdd6f4',
         fontSize,
         fontWeight: isTarget ? 'bold' : 'normal',
         userSelect: 'none',

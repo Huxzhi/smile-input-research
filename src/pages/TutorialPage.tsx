@@ -197,7 +197,7 @@ export function TutorialPage({ gazeOffsetX = 0, gazeOffsetY = 0, gazeMode = 'tob
       {ctrl && (
         <QwertyKeyboard
           controller={ctrl} gaze={gaze} targetChar={targetChar}
-          onKeyRect={handleKeyRect} keySize={keySize}
+          onKeyRect={handleKeyRect} keySize={keySize} showTarget
         />
       )}
 
