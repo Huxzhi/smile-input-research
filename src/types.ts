@@ -3,7 +3,9 @@ export type InputMethod = 'dwell' | 'blink' | 'smile'
 export type Language = 'zh' | 'ja' | 'en'
 export type AppPage =
   | 'debug'
+  | 'experimenter-config'
   | 'welcome'
+  | 'typing-test'
   | 'tutorial'
   | 'experiment'
   | 'survey'
@@ -12,6 +14,14 @@ export type AppPage =
 export interface ConditionConfig {
   layout: Layout
   inputMethod: InputMethod
+}
+
+export interface ExperimenterConfig {
+  experimenterName: string
+  conditionOrder: ConditionConfig[]
+  startConditionIndex: number   // 0-based
+  startPhraseIndex: number      // 0-based
+  phrasesPerCondition: number   // default 15
 }
 
 export interface GazePoint {
@@ -30,9 +40,15 @@ export interface FaceLandmark {
 }
 
 export interface FaceEvent {
-  smileScore: number    // 0–1, weighted combination of mouth corners + cheek squint
-  mouthSmile: number    // 0–1, (mouthSmileLeft + mouthSmileRight) / 2
-  cheekSquint: number   // 0–1, (cheekSquintLeft + cheekSquintRight) / 2 — Duchenne marker
+  smileScore: number      // 0–1, weighted combination of mouth corners + cheek squint
+  mouthSmile: number      // 0–1, (mouthSmileLeft + mouthSmileRight) / 2
+  mouthSmileLeft: number  // 0–1, left mouth corner rise
+  mouthSmileRight: number // 0–1, right mouth corner rise
+  cheekSquint: number     // 0–1, Duchenne marker (max of eyeSquint avg, cheekSquint avg)
+  eyeSquintLeft: number   // 0–1, lower eyelid rise — Duchenne smile marker
+  eyeSquintRight: number  // 0–1
+  blinkLeft: number       // 0–1, eyeBlinkLeft blendshape (0=open, 1=closed)
+  blinkRight: number      // 0–1, eyeBlinkRight blendshape
   ts: number
   landmarks?: FaceLandmark[]  // 478 MediaPipe face mesh points
 }
@@ -43,85 +59,56 @@ export interface InputFiredEvent {
   gazeY: number
   blinkLeft: number
   blinkRight: number
+  blinkDuration: number | null  // ms blink was held; only set for blink method
+  mouthSmileLeft: number
+  mouthSmileRight: number
+  eyeSquintLeft: number
+  eyeSquintRight: number
   smileScore: number
   dwellDuration: number | null
   ts: number
 }
 
-export interface Session {
-  id: string
-  participantId: string
-  language: Language
-  conditionOrder: ConditionConfig[]
-  smileCalibPeak: number
-  smileThreshold: number
-  startTime: number
-  endTime: number
-}
+export type EventLogType = 'experiment_start' | 'phrase_show' | 'char_input'
 
-export interface ExperimentEvent {
+export interface EventLog {
   sessionId: string
-  conditionIndex: number
-  layout: Layout
-  inputMethod: InputMethod
-  phraseIndex: number
-  targetChar: string
-  inputChar: string
-  isCorrect: boolean
-  gazeX: number
-  gazeY: number
-  blinkLeft: number
-  blinkRight: number
-  smileScore: number
-  actionTimestamp: number
-  charEntryTime: number   // ms since previous input (or phrase start for first char)
-  dwellDuration: number | null
-}
-
-// Continuous time-series sample recorded at ~10 Hz during active experiment
-export interface RawSample {
-  sessionId: string
-  conditionIndex: number
-  phraseIndex: number
-  charIndex: number
   ts: number
-  // Face
-  mouthSmile: number
-  cheekSquint: number   // Duchenne marker (eyeSquint-based)
-  smileScore: number
-  // Gaze
-  gazeX: number
-  gazeY: number
-  eyeOpen: boolean
+  type: EventLogType
+  description: string
+  // context — present on every entry
+  participantId?: string
+  layout?: Layout
+  isTutorial?: boolean
+  // char_input only:
+  gazeX?: number
+  gazeY?: number
+  smileScore?: number
+  mouthSmileLeft?: number
+  mouthSmileRight?: number
+  eyeSquintLeft?: number
+  eyeSquintRight?: number
+  blinkDuration?: number | null
+  inputMethod?: InputMethod
+  key?: string
+  isCorrect?: boolean
+  // config snapshot — present on experiment_start config entry only:
+  experimenterName?: string
+  conditionOrder?: string       // JSON.stringify(ConditionConfig[])
+  startConditionIndex?: number
+  startPhraseIndex?: number
+  phrasesPerCondition?: number
+  gazeMode?: 'tobii' | 'mouse'
+  language?: Language
 }
 
-export interface PhraseEvent {
-  sessionId: string
-  conditionIndex: number
-  layout: Layout
-  inputMethod: InputMethod
-  phraseIndex: number
-  phraseText: string
-  phraseStartTime: number
-  phraseEndTime: number
-  durationMs: number
-  wpm: number             // (phraseText.length / 5) / (durationMs / 60000)
-  totalInputs: number     // all key presses including backspace
-  backspaceCount: number
-  correctChars: number
-  errorRate: number       // errors / totalInputs excluding backspace
-}
-
-export interface SurveyResult {
-  sessionId: string
-  paScore: number         // sum of 10 PA items, range 10–50
-  naScore: number         // sum of 10 NA items, range 10–50
-  rawAnswers: number[]    // 20 items, 1–5 each
-  submittedAt: number
-}
+// Phrases per condition (6 conditions × 15 = 90 total, non-overlapping across conditions)
+export const PHRASES_PER_CONDITION = 15
 
 // Dwell time in ms
 export const DWELL_MS = 800
+// Blink min duration in ms (shorter = accidental, ignore)
+export const BLINK_MIN_MS = 150
 // Blink max duration in ms (longer = natural blink, ignore)
 export const BLINK_MAX_MS = 300
 // Blink cooldown in ms
