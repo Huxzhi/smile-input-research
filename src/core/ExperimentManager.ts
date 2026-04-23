@@ -20,7 +20,7 @@ export class ExperimentManager {
   constructor(private participantId: string, config?: ExperimenterConfig) {
     this.phrasesPerCondition = config?.phrasesPerCondition ?? PHRASES_PER_CONDITION
     this.conditionOrder = config?.conditionOrder ?? this.buildConditionOrder(participantId)
-    this.conditionPhrases = this.buildConditionPhrases(participantId, this.phrasesPerCondition)
+    this.conditionPhrases = this.buildConditionPhrases(participantId, this.phrasesPerCondition, this.conditionOrder.length)
   }
 
   private buildConditionOrder(pid: string): ConditionConfig[] {
@@ -39,14 +39,14 @@ export class ExperimentManager {
     ]
   }
 
-  private buildConditionPhrases(pid: string, ppc: number): string[][] {
-    const maxPpc = Math.floor(PHRASES.length / NUM_CONDITIONS)
+  private buildConditionPhrases(pid: string, ppc: number, numConditions: number): string[][] {
+    const maxPpc = Math.floor(PHRASES.length / numConditions)
     if (ppc > maxPpc) throw new Error(`phrasesPerCondition ${ppc} exceeds maximum ${maxPpc}`)
     const n = parseInt(pid, 10) || 1
-    const totalNeeded = NUM_CONDITIONS * ppc
+    const totalNeeded = numConditions * ppc
     // Offset varies per participant, stays within bounds
     const offset = (n * totalNeeded) % (PHRASES.length - totalNeeded)
-    return Array.from({ length: NUM_CONDITIONS }, (_, i) =>
+    return Array.from({ length: numConditions }, (_, i) =>
       PHRASES.slice(offset + i * ppc, offset + (i + 1) * ppc)
     )
   }
