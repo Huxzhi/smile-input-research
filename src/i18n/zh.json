@@ -71,5 +71,35 @@
     ],
     "pa": [0, 2, 4, 8, 10, 12, 14, 15, 17, 3],
     "na": [1, 3, 5, 6, 9, 11, 13, 16, 18, 19]
+  },
+  "conditionSurvey": {
+    "title": "本轮完成——请评价一下",
+    "subtitle": "条件 {index}：{layout} / {method}",
+    "submit": "提交并休息",
+    "tlx": {
+      "mental":      { "label": "脑力需求",    "lo": "极低",     "hi": "极高" },
+      "physical":    { "label": "体力需求",    "lo": "极低",     "hi": "极高" },
+      "temporal":    { "label": "时间压力",    "lo": "极低",     "hi": "极高" },
+      "performance": { "label": "表现满意度",  "lo": "非常满意", "hi": "非常不满意" },
+      "effort":      { "label": "努力程度",    "lo": "极低",     "hi": "极高" },
+      "happiness":   { "label": "愉悦感",      "lo": "极低",     "hi": "极高" }
+    },
+    "smileNaturalness":   "用微笑选字让我感到不自然",
+    "smileEmbarrassment": "如果在公开场合使用，我会感到尴尬",
+    "smileScale": ["完全不同意", "不同意", "中立", "同意", "完全同意"]
+  },
+  "finalSurvey": {
+    "next": "下一步",
+    "preferenceTitle": "输入方式偏好排序",
+    "preferenceInstruction": "请将三种输入方式从最喜欢（上）到最不喜欢（下）排序",
+    "methodNames": { "dwell": "注视输入", "blink": "眨眼输入", "smile": "微笑输入" },
+    "demographicsTitle": "基本信息",
+    "age": "年龄",
+    "gender": "性别",
+    "genderOptions": { "male": "男", "female": "女", "other": "其他", "prefer_not": "不愿透露" },
+    "hasEyeCondition": "您是否有眼部或面部肌肉疾病？",
+    "yes": "是",
+    "no": "否",
+    "submit": "提交"
   }
 }

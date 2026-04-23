@@ -71,5 +71,35 @@
     ],
     "pa": [0, 2, 4, 8, 10, 12, 14, 15, 17, 3],
     "na": [1, 3, 5, 6, 9, 11, 13, 16, 18, 19]
+  },
+  "conditionSurvey": {
+    "title": "Round complete — please rate it",
+    "subtitle": "Condition {index}: {layout} / {method}",
+    "submit": "Submit and rest",
+    "tlx": {
+      "mental":      { "label": "Mental demand",        "lo": "Very low",  "hi": "Very high" },
+      "physical":    { "label": "Physical demand",      "lo": "Very low",  "hi": "Very high" },
+      "temporal":    { "label": "Time pressure",        "lo": "Very low",  "hi": "Very high" },
+      "performance": { "label": "Performance",          "lo": "Very good", "hi": "Very poor" },
+      "effort":      { "label": "Effort",               "lo": "Very low",  "hi": "Very high" },
+      "happiness":   { "label": "Happiness",            "lo": "Very low",  "hi": "Very high" }
+    },
+    "smileNaturalness":   "Using smile to select felt unnatural",
+    "smileEmbarrassment": "I would feel embarrassed using this in public",
+    "smileScale": ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"]
+  },
+  "finalSurvey": {
+    "next": "Next",
+    "preferenceTitle": "Input method preference",
+    "preferenceInstruction": "Rank from most preferred (top) to least preferred (bottom)",
+    "methodNames": { "dwell": "Dwell", "blink": "Blink", "smile": "Smile" },
+    "demographicsTitle": "Demographics",
+    "age": "Age",
+    "gender": "Gender",
+    "genderOptions": { "male": "Male", "female": "Female", "other": "Other", "prefer_not": "Prefer not to say" },
+    "hasEyeCondition": "Do you have any eye or facial muscle condition?",
+    "yes": "Yes",
+    "no": "No",
+    "submit": "Submit"
   }
 }
