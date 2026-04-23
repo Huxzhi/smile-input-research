@@ -1,6 +1,8 @@
-import type { ConditionConfig, InputMethod, Layout } from '../types'
+import type { ConditionConfig, InputMethod, Layout, ExperimenterConfig } from '../types'
+import { PHRASES_PER_CONDITION } from '../types'
 import { PHRASES } from '../data/phrases'
 
+const NUM_CONDITIONS = 6
 const METHOD_ORDERS: InputMethod[][] = [
   ['smile', 'dwell', 'blink'],  // mod 0
   ['dwell', 'blink', 'smile'],  // mod 1
@@ -9,12 +11,16 @@ const METHOD_ORDERS: InputMethod[][] = [
 
 export class ExperimentManager {
   private conditionOrder: ConditionConfig[]
+  private conditionPhrases: string[][]
+  private phrasesPerCondition: number
   private conditionIndex = 0
   private phraseIndex = 0
   private charIndex = 0
 
-  constructor(private participantId: string) {
-    this.conditionOrder = this.buildConditionOrder(participantId)
+  constructor(private participantId: string, config?: ExperimenterConfig) {
+    this.phrasesPerCondition = config?.phrasesPerCondition ?? PHRASES_PER_CONDITION
+    this.conditionOrder = config?.conditionOrder ?? this.buildConditionOrder(participantId)
+    this.conditionPhrases = this.buildConditionPhrases(participantId, this.phrasesPerCondition)
   }
 
   private buildConditionOrder(pid: string): ConditionConfig[] {
@@ -33,8 +39,22 @@ export class ExperimentManager {
     ]
   }
 
+  private buildConditionPhrases(pid: string, ppc: number): string[][] {
+    const n = parseInt(pid, 10) || 1
+    const totalNeeded = NUM_CONDITIONS * ppc
+    // Offset varies per participant, stays within bounds
+    const offset = (n * totalNeeded) % (PHRASES.length - totalNeeded)
+    return Array.from({ length: NUM_CONDITIONS }, (_, i) =>
+      PHRASES.slice(offset + i * ppc, offset + (i + 1) * ppc)
+    )
+  }
+
   getConditionOrder(): ConditionConfig[] {
     return this.conditionOrder
+  }
+
+  getPhrasesPerCondition(): number {
+    return this.phrasesPerCondition
   }
 
   getCurrentCondition(): ConditionConfig {
@@ -45,14 +65,14 @@ export class ExperimentManager {
     return this.conditionIndex
   }
 
-  startCondition(index: number) {
+  startCondition(index: number, phraseIndex = 0) {
     this.conditionIndex = index
-    this.phraseIndex = 0
+    this.phraseIndex = phraseIndex
     this.charIndex = 0
   }
 
   getCurrentPhrase(): string {
-    return PHRASES[this.phraseIndex]
+    return this.conditionPhrases[this.conditionIndex][this.phraseIndex]
   }
 
   getPhraseIndex(): number {
@@ -73,7 +93,7 @@ export class ExperimentManager {
   }
 
   isConditionComplete(): boolean {
-    return this.phraseIndex >= PHRASES.length
+    return this.phraseIndex >= this.phrasesPerCondition
   }
 
   isExperimentComplete(): boolean {
