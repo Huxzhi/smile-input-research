@@ -68,7 +68,12 @@ export interface InputFiredEvent {
   ts: number
 }
 
-export type EventLogType = 'experiment_start' | 'phrase_show' | 'char_input'
+export type EventLogType =
+  | 'experiment_start'
+  | 'phrase_show'
+  | 'char_input'
+  | 'condition_survey'
+  | 'final_survey'
 
 export interface EventLog {
   sessionId: string
@@ -99,6 +104,22 @@ export interface EventLog {
   phrasesPerCondition?: number
   gazeMode?: 'tobii' | 'mouse'
   language?: Language
+  // condition_survey (NASA-TLX, 1–7 each):
+  tlxMental?: number
+  tlxPhysical?: number
+  tlxTemporal?: number
+  tlxPerformance?: number
+  tlxEffort?: number
+  tlxHappiness?: number
+  // condition_survey smile-specific (1–5, only when inputMethod === 'smile'):
+  smileNaturalness?: number
+  smileEmbarrassment?: number
+  // final_survey:
+  panasAnswers?: string    // JSON.stringify(number[20]), values 1–5
+  preferenceRank?: string  // JSON.stringify(InputMethod[3]), best→worst
+  age?: number
+  gender?: string          // 'male' | 'female' | 'other' | 'prefer_not'
+  hasEyeCondition?: boolean
 }
 
 // Phrases per condition (6 conditions × 15 = 90 total, non-overlapping across conditions)
