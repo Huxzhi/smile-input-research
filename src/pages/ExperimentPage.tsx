@@ -151,6 +151,7 @@ export function ExperimentPage({ session, addLog: addLogProp, onNext }: Props) {
       tlxPerformance: answers.tlxPerformance,
       tlxEffort:      answers.tlxEffort,
       tlxHappiness:   answers.tlxHappiness,
+      fatigue:            answers.fatigue,
       smileNaturalness:   answers.smileNaturalness ?? undefined,
       smileEmbarrassment: answers.smileEmbarrassment ?? undefined,
     })
@@ -213,7 +214,7 @@ export function ExperimentPage({ session, addLog: addLogProp, onNext }: Props) {
   const phrase = manager.getCurrentPhrase()
   const charIndex = manager.getCharIndex()
 
-  const kbAvailW = window.innerWidth - SIDEBAR_W - 32
+  const kbAvailW = Math.min(window.innerWidth - SIDEBAR_W - 32, window.innerWidth * 0.80)
   const kbAvailH = (window.innerHeight - 160) * 0.78
   const keySize = condition.layout === 'qwerty'
     ? computeQwertyKeySize(kbAvailW, kbAvailH)
