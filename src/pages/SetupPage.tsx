@@ -4,6 +4,7 @@ import type { CSSProperties } from 'react'
 import { StepNav } from '../components/StepNav'
 import { SurveyForm } from '../components/SurveyForm'
 import { WelcomePage } from './WelcomePage'
+import { DebugPage } from './DebugPage'
 import { PERSONAL_SURVEY, PANAS_PRE_SURVEY } from '../surveys/preSurvey'
 import { FINAL_SURVEY } from '../surveys/finalSurvey'
 import { ExperimentManager } from '../core/ExperimentManager'
@@ -21,6 +22,9 @@ const STEPS = [
 
 interface Props {
   addLog: (log: EventLog) => void
+  displayLogs: EventLog[]
+  clearLogs: () => void
+  onExport: () => void
   onStart: (session: SessionState) => void
 }
 
@@ -35,13 +39,14 @@ function hasData(key: string): boolean {
   return Object.keys(loadAnswers(key)).length > 0
 }
 
-export function SetupPage({ addLog, onStart }: Props) {
+export function SetupPage({ addLog, displayLogs, clearLogs, onExport, onStart }: Props) {
   const [participantId, setParticipantId] = useState('')
   const [previewStep, setPreviewStep]     = useState<number | null>(null)
   const [conditionIdx, setConditionIdx]   = useState(0)
   const [gazeMode, setGazeMode]           = useState<'tobii' | 'mouse'>('tobii')
   const [offsetX, setOffsetX]             = useState(0)
   const [offsetY, setOffsetY]             = useState(0)
+  const [showDebug, setShowDebug]         = useState(false)
 
   const pid = participantId.trim()
 
@@ -204,7 +209,39 @@ export function SetupPage({ addLog, onStart }: Props) {
         <button onClick={handleStart} disabled={!pid} style={startBtnSt(!pid)}>
           开始实验 →
         </button>
+
+        <button onClick={() => setShowDebug(true)} style={debugToggleBtn}>
+          调试面板 ▶
+        </button>
       </div>
+
+      {/* Debug panel (fullscreen overlay) */}
+      {showDebug && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1000 }}>
+          <DebugPage
+            displayLogs={displayLogs}
+            addLog={addLog}
+            clearLogs={clearLogs}
+            onExport={onExport}
+            onStart={(ox, oy, mode) => {
+              setOffsetX(ox)
+              setOffsetY(oy)
+              setGazeMode(mode)
+              setShowDebug(false)
+            }}
+          />
+          <button
+            onClick={() => setShowDebug(false)}
+            style={{
+              position: 'fixed', top: 8, right: 8, zIndex: 1001,
+              padding: '4px 12px', borderRadius: 5, border: 'none',
+              background: '#ff5555', color: '#fff', fontSize: 12, cursor: 'pointer',
+            }}
+          >
+            关闭 ✕
+          </button>
+        </div>
+      )}
     </div>
   )
 }
@@ -235,3 +272,9 @@ const startBtnSt = (disabled: boolean): CSSProperties => ({
   color: disabled ? '#444' : '#fff',
   fontSize: 16, cursor: disabled ? 'not-allowed' : 'pointer', width: '100%',
 })
+
+const debugToggleBtn: CSSProperties = {
+  marginTop: 8, padding: '8px 0', borderRadius: 8,
+  border: '1px solid #2a3050', background: 'transparent',
+  color: '#6a7490', fontSize: 13, cursor: 'pointer', width: '100%',
+}

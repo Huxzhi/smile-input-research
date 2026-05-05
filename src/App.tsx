@@ -20,14 +20,33 @@ export interface SessionState {
 }
 
 export default function App() {
-  const [mode, setMode]       = useState<'setup' | 'flow'>('setup')
-  const [session, setSession] = useState<SessionState | null>(null)
-  const storeRef              = useRef(new DataStore())
+  const [mode, setMode]             = useState<'setup' | 'flow'>('setup')
+  const [session, setSession]       = useState<SessionState | null>(null)
+  const [displayLogs, setDisplayLogs] = useState<EventLog[]>([])
+  const storeRef                    = useRef(new DataStore())
 
-  useEffect(() => { storeRef.current.init() }, [])
+  useEffect(() => {
+    storeRef.current.init().then(async () => {
+      const recent = await storeRef.current.getRecentLogs(10)
+      setDisplayLogs(recent)
+    })
+  }, [])
 
   const addLog = useCallback((log: EventLog) => {
+    setDisplayLogs(prev => [log, ...prev].slice(0, 80))
     storeRef.current.saveLog(log)
+  }, [])
+
+  const clearLogs = useCallback(() => setDisplayLogs([]), [])
+
+  const exportCSV = useCallback(async () => {
+    const csv = await storeRef.current.exportCSV()
+    if (!csv) return
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url  = URL.createObjectURL(blob)
+    const a    = document.createElement('a')
+    a.href = url; a.download = `logs_${Date.now()}.csv`; a.click()
+    URL.revokeObjectURL(url)
   }, [])
 
   return (
@@ -36,6 +55,9 @@ export default function App() {
         {mode === 'setup' && (
           <SetupPage
             addLog={addLog}
+            displayLogs={displayLogs}
+            clearLogs={clearLogs}
+            onExport={exportCSV}
             onStart={s => { setSession(s); setMode('flow') }}
           />
         )}
