@@ -73,6 +73,7 @@ export type EventLogType =
   | 'phrase_show'
   | 'char_input'
   | 'condition_survey'
+  | 'pre_survey'
   | 'final_survey'
 
 export interface EventLog {
@@ -120,6 +121,15 @@ export interface EventLog {
   age?: number
   gender?: string          // 'male' | 'female' | 'other' | 'prefer_not'
   hasEyeCondition?: boolean
+  // pre_survey:
+  eyeTrackerExperience?: string  // 'never' | 'rarely' | 'often'
+  panasPreAnswers?: string        // JSON.stringify(number[20]), values 1–5
+  // condition_survey 新增:
+  fatigue?: number                // 0–100
+  // final_survey 新增:
+  panasFinalAnswers?: string      // JSON.stringify(number[20])
+  tamPU?: string                  // JSON.stringify({pu1,pu2,pu3}), values 1–7
+  tamPEOU?: string                // JSON.stringify({eou1,eou2,eou3}), values 1–7
 }
 
 // Phrases per condition (6 conditions × 15 = 90 total, non-overlapping across conditions)
