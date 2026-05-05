@@ -8,6 +8,8 @@ interface Props {
   questions: QuestionDef[]
   initialAnswers?: Partial<SurveyAnswers>
   submitLabel?: string
+  showSubmit?: boolean
+  onChange?: (answers: SurveyAnswers) => void
   onSubmit: (answers: SurveyAnswers) => void
 }
 
@@ -39,11 +41,15 @@ function isComplete(q: QuestionDef, val: SurveyAnswers[string] | undefined): boo
   }
 }
 
-export function SurveyForm({ title, subtitle, questions, initialAnswers, submitLabel = '提交', onSubmit }: Props) {
+export function SurveyForm({ title, subtitle, questions, initialAnswers, submitLabel = '提交', showSubmit = true, onChange, onSubmit }: Props) {
   const [answers, setAnswers] = useState<SurveyAnswers>(() => initAnswers(questions, initialAnswers))
 
   const set = (id: string, val: SurveyAnswers[string]) =>
-    setAnswers(prev => ({ ...prev, [id]: val }))
+    setAnswers(prev => {
+      const next = { ...prev, [id]: val }
+      onChange?.(next)
+      return next
+    })
 
   const canSubmit = questions.every(q => isComplete(q, answers[q.id]))
 
@@ -61,18 +67,20 @@ export function SurveyForm({ title, subtitle, questions, initialAnswers, submitL
         />
       ))}
 
-      <button
-        onClick={() => canSubmit && onSubmit(answers)}
-        disabled={!canSubmit}
-        style={{
-          marginTop: 28, padding: '12px 32px', borderRadius: 8, border: 'none',
-          background: canSubmit ? '#50fa7b' : '#333',
-          color: canSubmit ? '#000' : '#666',
-          fontSize: 16, cursor: canSubmit ? 'pointer' : 'not-allowed', width: '100%',
-        }}
-      >
-        {submitLabel}
-      </button>
+      {showSubmit && (
+        <button
+          onClick={() => canSubmit && onSubmit(answers)}
+          disabled={!canSubmit}
+          style={{
+            marginTop: 28, padding: '12px 32px', borderRadius: 8, border: 'none',
+            background: canSubmit ? '#50fa7b' : '#333',
+            color: canSubmit ? '#000' : '#666',
+            fontSize: 16, cursor: canSubmit ? 'pointer' : 'not-allowed', width: '100%',
+          }}
+        >
+          {submitLabel}
+        </button>
+      )}
     </div>
   )
 }
