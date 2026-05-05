@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useI18n } from '../i18n'
 import type { SessionState } from '../App'
+import { METHOD_ZH } from '../types'
 import type { GazePoint, EventLog } from '../types'
+import { centerColumn } from '../styles'
 import { InputController } from '../core/InputController'
 import { useGazeInput } from '../core/useGazeInput'
 import { ExperimentManager } from '../core/ExperimentManager'
@@ -22,7 +24,6 @@ interface Props {
 const REST_SECS = 60
 const SIDEBAR_W = 130
 
-const METHOD_ZH: Record<string, string> = { dwell: '注视', smile: '微笑', blink: '眨眼' }
 
 export function ExperimentPage({ session, addLog: addLogProp, onNext }: Props) {
   const { t } = useI18n()
@@ -252,7 +253,7 @@ export function ExperimentPage({ session, addLog: addLogProp, onNext }: Props) {
           />
         </div>
       ) : phase === 'resting' ? (
-        <div style={{ ...centerStyle, paddingLeft: SIDEBAR_W }}>
+        <div style={{ ...centerColumn, paddingLeft: SIDEBAR_W }}>
           <h2 style={{ color: '#f1fa8c' }}>{t('experiment.rest')}</h2>
           <p style={{ color: '#aaa', fontSize: 18 }}>
             {t('experiment.restMessage', { seconds: String(restSecsLeft) })}
@@ -339,10 +340,6 @@ const sidebarStyle: React.CSSProperties = {
   padding: '16px 8px 8px', zIndex: 100, overflowY: 'auto',
 }
 
-const centerStyle: React.CSSProperties = {
-  display: 'flex', flexDirection: 'column', alignItems: 'center',
-  justifyContent: 'center', minHeight: '100vh', gap: 20,
-}
 
 const actionBtn: React.CSSProperties = {
   padding: '12px 32px', borderRadius: 8, border: 'none',

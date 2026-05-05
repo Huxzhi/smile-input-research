@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { CSSProperties } from 'react'
+import { isComplete } from '../surveys/types'
 import type { QuestionDef, SurveyAnswers } from '../surveys/types'
 
 interface Props {
@@ -29,17 +30,6 @@ function initAnswers(questions: QuestionDef[], initial: Partial<SurveyAnswers> =
   return init
 }
 
-function isComplete(q: QuestionDef, val: SurveyAnswers[string] | undefined): boolean {
-  if (val === undefined) return false
-  switch (q.type) {
-    case 'text':        return (val as string).trim() !== ''
-    case 'likert':      return (val as number) > 0
-    case 'score100':    return true
-    case 'radio':       return (val as string) !== ''
-    case 'panas_batch': return (val as number[]).every(v => v > 0)
-    case 'rank':        return true
-  }
-}
 
 export function SurveyForm({ title, subtitle, questions, initialAnswers, submitLabel = '提交', showSubmit = true, onChange, onSubmit }: Props) {
   const [answers, setAnswers] = useState<SurveyAnswers>(() => initAnswers(questions, initialAnswers))

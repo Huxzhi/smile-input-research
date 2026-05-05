@@ -6,6 +6,7 @@ import { GazeCursor } from '../components/GazeCursor'
 import { FaceDebugPanel } from '../components/FaceDebugPanel'
 import { QwertyKeyboard, computeQwertyKeySize } from '../components/keyboards/QwertyKeyboard'
 import type { InputMethod, FaceEvent } from '../types'
+import { centerColumn } from '../styles'
 
 interface Props {
   participantId: string
@@ -122,7 +123,7 @@ export function TutorialPage({ gazeOffsetX = 0, gazeOffsetY = 0, gazeMode = 'tob
 
   if (step === 'smile-calib') {
     return (
-      <div style={centerStyle}>
+      <div style={centerColumn}>
         <video ref={videoRef} style={{ display: 'none' }} />
         <GazeCursor ref={cursorRef} />
         <FaceDebugPanel videoRef={videoRef} faceEvent={faceEvent} gaze={gaze} />
@@ -208,7 +209,3 @@ export function TutorialPage({ gazeOffsetX = 0, gazeOffsetY = 0, gazeMode = 'tob
   )
 }
 
-const centerStyle: React.CSSProperties = {
-  display: 'flex', flexDirection: 'column', alignItems: 'center',
-  justifyContent: 'center', minHeight: '100vh', gap: 20,
-}

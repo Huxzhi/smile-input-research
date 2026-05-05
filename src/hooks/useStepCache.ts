@@ -1,23 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
+import { loadJSON, saveJSON } from '../utils/storage'
 
 export function useStepCache<T>(key: string, initial: T): [T, (val: T) => void] {
-  const [value, setValue] = useState<T>(() => {
-    try {
-      const raw = localStorage.getItem(key)
-      return raw ? (JSON.parse(raw) as T) : initial
-    } catch {
-      return initial
-    }
-  })
-
+  const [value, setValue] = useState<T>(() => loadJSON(key, initial))
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const set = (val: T) => {
     setValue(val)
     if (timerRef.current) clearTimeout(timerRef.current)
-    timerRef.current = setTimeout(() => {
-      try { localStorage.setItem(key, JSON.stringify(val)) } catch { /* quota */ }
-    }, 300)
+    timerRef.current = setTimeout(() => saveJSON(key, val), 300)
   }
 
   useEffect(() => () => {

@@ -2,6 +2,8 @@ export type Layout = 'qwerty' | 'opti'
 export type InputMethod = 'dwell' | 'blink' | 'smile'
 export type Language = 'zh' | 'ja' | 'en'
 
+export const METHOD_ZH: Record<InputMethod, string> = { dwell: '注视', blink: '眨眼', smile: '微笑' }
+
 export interface ConditionConfig {
   layout: Layout
   inputMethod: InputMethod

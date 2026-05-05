@@ -38,7 +38,9 @@
       "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\('panas',{}\\), ensure_ascii=False, indent=2\\)\\)\")",
       "Bash(pnpm build *)",
       "Bash(xargs -I{} basename {})",
-      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); deps={**d.get\\('dependencies',{}\\),**d.get\\('devDependencies',{}\\)}; print\\('\\\\n'.join\\(k for k in deps if 'router' in k.lower\\(\\) or 'wouter' in k.lower\\(\\)\\)\\)\")"
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); deps={**d.get\\('dependencies',{}\\),**d.get\\('devDependencies',{}\\)}; print\\('\\\\n'.join\\(k for k in deps if 'router' in k.lower\\(\\) or 'wouter' in k.lower\\(\\)\\)\\)\")",
+      "Bash(cat)",
+      "Read(//tmp/**)"
     ]
   }
 }

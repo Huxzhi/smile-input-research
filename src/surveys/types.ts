@@ -8,3 +8,15 @@ export type QuestionDef =
 
 export type SurveyAnswer = string | number | number[] | string[]
 export type SurveyAnswers = Record<string, SurveyAnswer>
+
+export function isComplete(q: QuestionDef, val: SurveyAnswer | undefined): boolean {
+  if (val === undefined) return false
+  switch (q.type) {
+    case 'text':        return (val as string).trim() !== ''
+    case 'likert':      return (val as number) > 0
+    case 'score100':    return true
+    case 'radio':       return (val as string) !== ''
+    case 'panas_batch': return (val as number[]).every(v => v > 0)
+    case 'rank':        return true
+  }
+}

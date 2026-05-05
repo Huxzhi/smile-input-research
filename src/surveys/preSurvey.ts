@@ -6,7 +6,7 @@ const PANAS_ITEMS = [
   '坐立不安的', '积极的', '恐惧的', '敌意的',
 ]
 
-export const PRE_SURVEY: QuestionDef[] = [
+const PRE_SURVEY: QuestionDef[] = [
   {
     id: 'age', type: 'text', label: '年龄', placeholder: '请输入数字',
   },

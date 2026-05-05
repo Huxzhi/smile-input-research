@@ -1,5 +1,7 @@
 import { useState, useCallback } from 'react'
-import type { QuestionDef, SurveyAnswers } from '../surveys/types'
+import { isComplete } from '../surveys/types'
+import type { SurveyAnswers } from '../surveys/types'
+import { loadJSON, saveJSON, removeJSON } from '../utils/storage'
 import { StepNav } from '../components/StepNav'
 import { SurveyForm } from '../components/SurveyForm'
 import { WelcomePage } from './WelcomePage'
@@ -27,21 +29,11 @@ interface Props {
   onDone: () => void
 }
 
-function allComplete(questions: QuestionDef[], answers: SurveyAnswers): boolean {
-  return questions.every(q => {
-    const v = answers[q.id]
-    if (v === undefined) return false
-    if (q.type === 'text') return (v as string).trim() !== ''
-    if (q.type === 'likert') return (v as number) > 0
-    if (q.type === 'radio') return (v as string) !== ''
-    if (q.type === 'panas_batch') return (v as number[]).every(n => n > 0)
-    return true
-  })
-}
+const allComplete = (questions: typeof PERSONAL_SURVEY, answers: SurveyAnswers) =>
+  questions.every(q => isComplete(q, answers[q.id]))
 
-function saveStep(pid: string, step: number) {
-  try { localStorage.setItem(`flow_step_${pid}`, String(step)) } catch { /* quota */ }
-}
+const saveStep = (pid: string, step: number) =>
+  saveJSON(`flow_step_${pid}`, step)
 
 export function FlowPage({ session, addLog, onSetSession, onDone }: Props) {
   const pid = session.participantId
@@ -96,9 +88,7 @@ export function FlowPage({ session, addLog, onSetSession, onDone }: Props) {
   }
 
   const handleCalibDone = (peak: number, threshold: number) => {
-    try {
-      localStorage.setItem(`step_calibration_${pid}`, JSON.stringify({ peak, threshold }))
-    } catch { /* quota */ }
+    saveJSON(`step_calibration_${pid}`, { peak, threshold })
     onSetSession(s => ({ ...s, smileCalibPeak: peak, smileThreshold: threshold }))
     advance(4)
   }
@@ -106,9 +96,7 @@ export function FlowPage({ session, addLog, onSetSession, onDone }: Props) {
   const handleExperimentDone = () => advance(5)
 
   const handleFinalSubmit = (answers: SurveyAnswers) => {
-    try {
-      localStorage.setItem(`step_postsurvey_${pid}`, JSON.stringify(answers))
-    } catch { /* quota */ }
+    saveJSON(`step_postsurvey_${pid}`, answers)
     addLog({
       sessionId: session.sessionId,
       participantId: pid,
@@ -120,16 +108,11 @@ export function FlowPage({ session, addLog, onSetSession, onDone }: Props) {
       tamPEOU: JSON.stringify({ eou1: answers.eou1, eou2: answers.eou2, eou3: answers.eou3 }),
       preferenceRank: JSON.stringify(answers.preference),
     })
-    try { localStorage.removeItem(`flow_step_${pid}`) } catch { /* */ }
+    removeJSON(`flow_step_${pid}`)
     onDone()
   }
 
-  const postsurveyInitial = (() => {
-    try {
-      const raw = localStorage.getItem(`step_postsurvey_${pid}`)
-      return raw ? (JSON.parse(raw) as SurveyAnswers) : {}
-    } catch { return {} }
-  })()
+  const postsurveyInitial = loadJSON<SurveyAnswers>(`step_postsurvey_${pid}`, {})
 
   const showNextBtn   = step <= 2
   const nextDisabled  =

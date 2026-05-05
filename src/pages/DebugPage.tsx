@@ -6,10 +6,10 @@ import { FaceDebugPanel } from '../components/FaceDebugPanel'
 import { QwertyKeyboard, computeQwertyKeySize } from '../components/keyboards/QwertyKeyboard'
 import { OptiKeyboard, computeOptiKeySize } from '../components/keyboards/OptiKeyboard'
 import { useI18n } from '../i18n'
+import { METHOD_ZH } from '../types'
 import type { EventLog, InputMethod, Layout } from '../types'
 import { PHRASES } from '../data/phrases'
 
-const METHOD_ZH: Record<InputMethod, string> = { dwell: '注视', blink: '眨眼', smile: '微笑' }
 const randomPhrase = () => PHRASES[Math.floor(Math.random() * PHRASES.length)]
 
 const BOTTOM_H = 280

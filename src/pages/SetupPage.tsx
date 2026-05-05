@@ -8,6 +8,7 @@ import { DebugPage } from './DebugPage'
 import { PERSONAL_SURVEY, PANAS_PRE_SURVEY } from '../surveys/preSurvey'
 import { FINAL_SURVEY } from '../surveys/finalSurvey'
 import { ExperimentManager } from '../core/ExperimentManager'
+import { loadJSON } from '../utils/storage'
 import type { EventLog } from '../types'
 import type { SessionState } from '../App'
 
@@ -28,16 +29,8 @@ interface Props {
   onStart: (session: SessionState) => void
 }
 
-function loadAnswers(key: string): Record<string, unknown> {
-  try {
-    const raw = localStorage.getItem(key)
-    return raw ? JSON.parse(raw) : {}
-  } catch { return {} }
-}
-
-function hasData(key: string): boolean {
-  return Object.keys(loadAnswers(key)).length > 0
-}
+const hasData = (key: string) =>
+  Object.keys(loadJSON(key, {})).length > 0
 
 export function SetupPage({ addLog, displayLogs, clearLogs, onExport, onStart }: Props) {
   const [participantId, setParticipantId] = useState('')
@@ -68,19 +61,14 @@ export function SetupPage({ addLog, displayLogs, clearLogs, onExport, onStart }:
       5: `step_postsurvey_${pid}`,
     }
     const k = keyMap[previewStep]
-    return k ? loadAnswers(k) : {}
+    return k ? loadJSON(k, {}) : {}
   })()
 
   const handleStart = () => {
     if (!pid) return
     const sessionId = uuid()
     const conditions = new ExperimentManager(conditionIdx.toString()).getConditionOrder()
-    const savedStep = (() => {
-      try {
-        const raw = localStorage.getItem(`flow_step_${pid}`)
-        return raw ? parseInt(raw, 10) : 0
-      } catch { return 0 }
-    })()
+    const savedStep = loadJSON(`flow_step_${pid}`, 0)
     const orderStr = conditions.map(c => `${c.layout}/${c.inputMethod}`).join(', ')
     addLog({
       sessionId, ts: Date.now(), type: 'experiment_start',

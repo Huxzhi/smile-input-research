@@ -1,5 +1,6 @@
 import { useI18n } from '../i18n'
 import type { Language } from '../types'
+import { centerColumn } from '../styles'
 
 interface Props {
   onNext: (language: Language) => void
@@ -9,7 +10,7 @@ export function WelcomePage({ onNext }: Props) {
   const { t, lang, setLang } = useI18n()
 
   return (
-    <div style={centerStyle}>
+    <div style={centerColumn}>
       <h1 style={{ fontSize: 28, marginBottom: 8 }}>{t('welcome.title')}</h1>
 
       <div style={{ display: 'flex', gap: 10 }}>
@@ -50,11 +51,3 @@ export function WelcomePage({ onNext }: Props) {
   )
 }
 
-const centerStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  minHeight: '100vh',
-  gap: 20,
-}
