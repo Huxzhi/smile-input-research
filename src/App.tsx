@@ -23,6 +23,7 @@ export interface SessionState {
   gazeMode: 'tobii' | 'mouse'
   experimenterName: string
   experimenterConfig: ExperimenterConfig
+  initialFlowStep: number
 }
 
 export default function App() {
