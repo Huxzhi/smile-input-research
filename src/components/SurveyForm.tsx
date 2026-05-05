@@ -6,16 +6,23 @@ interface Props {
   title?: string
   subtitle?: string
   questions: QuestionDef[]
+  initialAnswers?: Partial<SurveyAnswers>
   submitLabel?: string
   onSubmit: (answers: SurveyAnswers) => void
 }
 
-function initAnswers(questions: QuestionDef[]): SurveyAnswers {
+function initAnswers(questions: QuestionDef[], initial: Partial<SurveyAnswers> = {}): SurveyAnswers {
   const init: SurveyAnswers = {}
   for (const q of questions) {
-    if (q.type === 'panas_batch') init[q.id] = new Array(q.items.length).fill(0)
-    else if (q.type === 'rank') init[q.id] = q.items.map(i => i.value)
-    else if (q.type === 'score100') init[q.id] = 50
+    if (initial[q.id] !== undefined) {
+      init[q.id] = initial[q.id]!
+    } else if (q.type === 'panas_batch') {
+      init[q.id] = new Array(q.items.length).fill(0)
+    } else if (q.type === 'rank') {
+      init[q.id] = q.items.map(i => i.value)
+    } else if (q.type === 'score100') {
+      init[q.id] = 50
+    }
   }
   return init
 }
@@ -32,8 +39,8 @@ function isComplete(q: QuestionDef, val: SurveyAnswers[string] | undefined): boo
   }
 }
 
-export function SurveyForm({ title, subtitle, questions, submitLabel = '提交', onSubmit }: Props) {
-  const [answers, setAnswers] = useState<SurveyAnswers>(() => initAnswers(questions))
+export function SurveyForm({ title, subtitle, questions, initialAnswers, submitLabel = '提交', onSubmit }: Props) {
+  const [answers, setAnswers] = useState<SurveyAnswers>(() => initAnswers(questions, initialAnswers))
 
   const set = (id: string, val: SurveyAnswers[string]) =>
     setAnswers(prev => ({ ...prev, [id]: val }))
