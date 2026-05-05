@@ -245,6 +245,7 @@ export function ExperimentPage({ session, addLog: addLogProp, onNext }: Props) {
         <div style={{ paddingLeft: SIDEBAR_W }}>
           <ConditionSurvey
             conditionIndex={conditionIndex}
+            participantId={session.participantId}
             layout={condition.layout}
             inputMethod={condition.inputMethod}
             onSubmit={handleSurveySubmit}

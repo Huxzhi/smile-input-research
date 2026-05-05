@@ -18,6 +18,7 @@ export interface ConditionSurveyAnswers {
 
 interface Props {
   conditionIndex: number
+  participantId: string
   layout: Layout
   inputMethod: InputMethod
   onSubmit: (answers: ConditionSurveyAnswers) => void
@@ -25,10 +26,23 @@ interface Props {
 
 const METHOD_ZH: Record<InputMethod, string> = { dwell: '注视', blink: '眨眼', smile: '微笑' }
 
-export function ConditionSurvey({ conditionIndex, layout, inputMethod, onSubmit }: Props) {
+function cacheKey(pid: string, idx: number) {
+  return `condition_survey_${pid}_${idx}`
+}
+
+function loadCache(pid: string, idx: number): Partial<SurveyAnswers> {
+  try {
+    const raw = localStorage.getItem(cacheKey(pid, idx))
+    return raw ? JSON.parse(raw) : {}
+  } catch { return {} }
+}
+
+export function ConditionSurvey({ conditionIndex, participantId, layout, inputMethod, onSubmit }: Props) {
   const { t } = useI18n()
+  const initialAnswers = loadCache(participantId, conditionIndex)
 
   const handleSubmit = (raw: SurveyAnswers) => {
+    try { localStorage.setItem(cacheKey(participantId, conditionIndex), JSON.stringify(raw)) } catch { /* quota */ }
     onSubmit({
       tlxMental:          raw.tlxMental      as number,
       tlxPhysical:        raw.tlxPhysical    as number,
@@ -51,6 +65,7 @@ export function ConditionSurvey({ conditionIndex, layout, inputMethod, onSubmit 
         method: METHOD_ZH[inputMethod],
       }) as string}
       questions={getConditionSurveyQuestions(inputMethod)}
+      initialAnswers={initialAnswers}
       submitLabel={t('conditionSurvey.submit') as string}
       onSubmit={handleSubmit}
     />
