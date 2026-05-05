@@ -38,3 +38,11 @@ export const PRE_SURVEY: QuestionDef[] = [
     id: 'panas_pre', type: 'panas_batch', items: PANAS_ITEMS,
   },
 ]
+
+export const PERSONAL_SURVEY: QuestionDef[] = PRE_SURVEY.filter(
+  q => q.type !== 'panas_batch'
+)
+
+export const PANAS_PRE_SURVEY: QuestionDef[] = PRE_SURVEY.filter(
+  q => q.type === 'panas_batch'
+)
