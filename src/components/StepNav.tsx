@@ -17,7 +17,7 @@ export function StepNav({
         const isCompleted = completedSteps.has(i)
         const isCurrent   = i === currentStep
         const isLocked    = lockedSteps.has(i)
-        const canClick    = (isCompleted || isCurrent) && !isLocked
+        const canClick    = !isLocked
 
         return (
           <button
@@ -47,8 +47,8 @@ const stepBtn = (
 ): CSSProperties => ({
   padding: '6px 14px', borderRadius: 6, border: 'none',
   fontSize: 13, cursor: canClick ? 'pointer' : 'default', whiteSpace: 'nowrap',
-  background: current ? '#5a7aff' : completed ? '#1a3a1a' : '#0d1117',
-  color: current ? '#fff' : completed ? '#50fa7b' : locked ? '#2a2a3a' : '#555',
+  background: current ? '#5a7aff' : completed ? '#1a3a1a' : '#161c28',
+  color: current ? '#fff' : completed ? '#50fa7b' : locked ? '#2a2a3a' : '#6a7490',
   opacity: locked ? 0.5 : 1,
   transition: 'background 150ms',
 })

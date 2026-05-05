@@ -55,16 +55,13 @@ export function FlowPage({ session, addLog, onSetSession, onDone }: Props) {
   )
 
   const completedSteps = new Set(Array.from({ length: step }, (_, i) => i))
-  const lockedSteps    = step === 4 ? new Set([0, 1, 2, 3, 4, 5]) : new Set<number>()
 
   const advance = useCallback((nextStep: number) => {
     saveStep(pid, nextStep)
     setStep(nextStep)
   }, [pid])
 
-  const handleStepClick = (i: number) => {
-    if (step !== 4) advance(i)
-  }
+  const handleStepClick = (i: number) => advance(i)
 
   const canProceedStep1 = allComplete(PERSONAL_SURVEY, personalAnswers)
   const canProceedStep2 = allComplete(PANAS_PRE_SURVEY, preAnswers)
@@ -145,7 +142,6 @@ export function FlowPage({ session, addLog, onSetSession, onDone }: Props) {
         steps={STEPS}
         currentStep={step}
         completedSteps={completedSteps}
-        lockedSteps={lockedSteps}
         onStepClick={handleStepClick}
       />
 
