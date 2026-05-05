@@ -1,15 +1,6 @@
 export type Layout = 'qwerty' | 'opti'
 export type InputMethod = 'dwell' | 'blink' | 'smile'
 export type Language = 'zh' | 'ja' | 'en'
-export type AppPage =
-  | 'debug'
-  | 'experimenter-config'
-  | 'welcome'
-  | 'typing-test'
-  | 'tutorial'
-  | 'pre-survey'
-  | 'experiment'
-  | 'survey'
 
 export interface ConditionConfig {
   layout: Layout
