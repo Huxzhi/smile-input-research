@@ -170,15 +170,27 @@ export function ExperimentPage({ session, addLog: addLogProp, onNext }: Props) {
         const isActive = i === conditionIndex && phase === 'running'
         const isDone = i < conditionIndex || (i === conditionIndex && phase !== 'running' && manager.isConditionComplete())
         return (
-          <div key={i} style={{
-            padding: '6px 8px', borderRadius: 6, marginBottom: 3,
-            background: isActive ? '#0e1e3a' : 'transparent',
-            border: `1px solid ${isActive ? '#2a5080' : 'transparent'}`,
-            opacity: isDone ? 0.35 : 1,
-            transition: 'all 200ms',
-          }}>
-            <div style={{ fontSize: 9, color: isActive ? '#8be9fd' : '#444', letterSpacing: 0.5 }}>
-              条件 {i + 1}{isDone ? ' ✓' : ''}
+          <div key={i}
+            onClick={() => { setConditionIndex(i); setPhase('running') }}
+            style={{
+              padding: '6px 8px', borderRadius: 6, marginBottom: 3, cursor: 'pointer',
+              background: isActive ? '#0e1e3a' : 'transparent',
+              border: `1px solid ${isActive ? '#2a5080' : 'transparent'}`,
+              opacity: isDone ? 0.5 : 1,
+              transition: 'all 200ms',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ fontSize: 9, color: isActive ? '#8be9fd' : '#444', letterSpacing: 0.5 }}>
+                条件 {i + 1}{isDone ? ' ✓' : ''}
+              </div>
+              <button
+                onClick={e => { e.stopPropagation(); setConditionIndex(i); setPhase('condition-survey') }}
+                style={surveyBtn}
+                title="打开条件问卷"
+              >
+                问卷
+              </button>
             </div>
             <div style={{ fontSize: 10, fontWeight: isActive ? 600 : 400, color: isActive ? '#cdd6f4' : '#555' }}>
               {cond.layout.toUpperCase()}
@@ -339,4 +351,10 @@ const actionBtn: React.CSSProperties = {
 const debugSkipBtn: React.CSSProperties = {
   padding: '2px 8px', borderRadius: 4, border: '1px solid #333',
   background: 'transparent', color: '#666', fontSize: 11, cursor: 'pointer',
+}
+
+const surveyBtn: React.CSSProperties = {
+  padding: '1px 5px', borderRadius: 3, border: '1px solid #2a3050',
+  background: '#0e1628', color: '#5a7aff', fontSize: 9, cursor: 'pointer',
+  lineHeight: '14px', flexShrink: 0,
 }
