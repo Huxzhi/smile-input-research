@@ -7,6 +7,7 @@ export type AppPage =
   | 'welcome'
   | 'typing-test'
   | 'tutorial'
+  | 'pre-survey'
   | 'experiment'
   | 'survey'
 

@@ -9,6 +9,7 @@ import { TypingTestPage } from './pages/TypingTestPage'
 import { TutorialPage } from './pages/TutorialPage'
 import { ExperimentPage } from './pages/ExperimentPage'
 import { SurveyPage } from './pages/SurveyPage'
+import { PreSurveyPage } from './pages/PreSurveyPage'
 
 
 export interface SessionState {
@@ -115,8 +116,16 @@ export default function App() {
             gazeMode={session.gazeMode}
             onNext={(peak, threshold) => {
               setSession(s => s ? { ...s, smileCalibPeak: peak, smileThreshold: threshold } : s)
-              goTo('experiment')
+              goTo('pre-survey')
             }}
+          />
+        )}
+        {page === 'pre-survey' && session && (
+          <PreSurveyPage
+            sessionId={session.sessionId}
+            participantId={session.participantId}
+            addLog={addLog}
+            onNext={() => goTo('experiment')}
           />
         )}
         {page === 'experiment' && session && (
