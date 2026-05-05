@@ -159,7 +159,7 @@ export function TutorialPage({ gazeOffsetX = 0, gazeOffsetY = 0, gazeMode = 'tob
 
   const ctrl = controllerRef.current
   const targetChar = PRACTICE_CHARS[practiceIdx]
-  const kbAvailW = window.innerWidth - 32
+  const kbAvailW = Math.min(window.innerWidth - 32, window.innerWidth * 0.80)
   const kbAvailH = window.innerHeight * 0.65
   const keySize = computeQwertyKeySize(kbAvailW, kbAvailH)
 
