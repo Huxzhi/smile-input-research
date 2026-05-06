@@ -22,7 +22,7 @@ export class InputController {
   private blinkCandidateGaze: GazePoint | null = null
   private blinkCooldownUntil: number = 0
   private lastEyeOpen: boolean = true
-  private blinkDwellTimer: ReturnType<typeof setTimeout> | null = null
+  private blinkLockTimer: ReturnType<typeof setTimeout> | null = null
   private blinkReadyKey: string | null = null
   private blinkReadyGaze: GazePoint | null = null
 
@@ -64,10 +64,8 @@ export class InputController {
     }
 
     if (this.method === 'blink') {
-      if (this.blinkDwellTimer) clearTimeout(this.blinkDwellTimer)
-      this.blinkReadyKey = null
-      this.blinkReadyGaze = null
-      this.blinkDwellTimer = setTimeout(() => {
+      if (this.blinkLockTimer) clearTimeout(this.blinkLockTimer)
+      this.blinkLockTimer = setTimeout(() => {
         this.blinkReadyKey = key
         this.blinkReadyGaze = gaze
       }, CANDIDATE_DWELL_MS)
@@ -92,8 +90,8 @@ export class InputController {
       this.dwellTimer = null
     }
     if (this.method === 'blink') {
-      if (this.blinkDwellTimer) { clearTimeout(this.blinkDwellTimer); this.blinkDwellTimer = null }
-      // blinkReadyKey persists until a new key completes its dwell
+      if (this.blinkLockTimer) { clearTimeout(this.blinkLockTimer); this.blinkLockTimer = null }
+      // blinkReadyKey persists until a new key completes its lock dwell
     }
     if (this.method === 'smile') {
       if (this.smileLockTimer) { clearTimeout(this.smileLockTimer); this.smileLockTimer = null }
@@ -114,7 +112,7 @@ export class InputController {
 
     if (!eyeOpen && wasOpen && now >= this.blinkCooldownUntil) {
       this.blinkStart = now
-      // Lock candidate at blink start using the pre-dwelled ready key
+      // Lock candidate at blink start using the 0.4s-locked ready key
       this.blinkCandidateKey = this.blinkReadyKey
       this.blinkCandidateGaze = this.blinkReadyGaze
     } else if (eyeOpen && !wasOpen && this.blinkStart !== null) {
