@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { FaceDebugPanel } from './FaceDebugPanel'
 import { loadJSON, saveJSON } from '../utils/storage'
-import type { FaceEvent, GazePoint } from '../types'
+import type { FaceEvent, GazePoint, ConditionConfig } from '../types'
 import type { GazeStatus } from '../core/InputSource'
+import { METHOD_ZH } from '../types'
 
 const STORAGE_KEY  = 'debug_drawer_open'
 const OFFSET_STEP  = 0.01
@@ -19,20 +20,26 @@ interface Props {
   smileThreshold: number
   blinkMinMs: number
   blinkMaxMs: number
+  conditions?: ConditionConfig[]
+  conditionIndex?: number
   onGazeModeChange: (mode: 'tobii' | 'mouse') => void
   onOffsetXChange: (v: number) => void
   onOffsetYChange: (v: number) => void
   onSmileThresholdChange: (v: number) => void
   onBlinkMinChange: (v: number) => void
   onBlinkMaxChange: (v: number) => void
+  onConditionJump?: (i: number) => void
+  onConditionsChange?: (conds: ConditionConfig[]) => void
 }
 
 export function DebugDrawer({
   videoRef, faceEvent, gaze,
   gazeMode, gazeStatus, offsetX, offsetY,
   smileThreshold, blinkMinMs, blinkMaxMs,
+  conditions, conditionIndex,
   onGazeModeChange, onOffsetXChange, onOffsetYChange,
   onSmileThresholdChange, onBlinkMinChange, onBlinkMaxChange,
+  onConditionJump, onConditionsChange,
 }: Props) {
   const [open, setOpen] = useState(() => loadJSON<boolean>(STORAGE_KEY, false))
 
@@ -103,6 +110,60 @@ export function DebugDrawer({
               </>
             )}
           </div>
+
+          {/* Condition order & jump */}
+          {conditions && onConditionJump && onConditionsChange && (
+            <div style={{ borderTop: '1px solid #1e2430', padding: '6px 12px' }}>
+              <div style={{ fontSize: 10, color: '#555', marginBottom: 4 }}>条件顺序（点击跳转）</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                {conditions.map((cond, i) => {
+                  const isActive  = i === conditionIndex
+                  const isDone    = conditionIndex !== undefined && i < conditionIndex
+                  return (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <span style={{
+                        fontSize: 10, fontFamily: 'monospace', minWidth: 14, color: '#555',
+                      }}>{i + 1}.</span>
+                      <button
+                        onClick={() => onConditionJump(i)}
+                        style={{
+                          flex: 1, textAlign: 'left', padding: '2px 8px', borderRadius: 3,
+                          border: `1px solid ${isActive ? '#5a7aff' : '#21262d'}`,
+                          background: isActive ? '#1e1e4e' : isDone ? '#0a1428' : 'transparent',
+                          color: isActive ? '#cdd6f4' : isDone ? '#50fa7b' : '#666',
+                          cursor: 'pointer', fontSize: 10,
+                        }}
+                      >
+                        {cond.layout.toUpperCase()} / {METHOD_ZH[cond.inputMethod]}
+                        {isActive && <span style={{ marginLeft: 6, color: '#5a7aff' }}>◀ 当前</span>}
+                        {isDone   && <span style={{ marginLeft: 6, color: '#50fa7b' }}>✓</span>}
+                      </button>
+                      <button
+                        disabled={i === 0}
+                        onClick={() => {
+                          const next = [...conditions]
+                          ;[next[i - 1], next[i]] = [next[i], next[i - 1]]
+                          onConditionsChange(next)
+                        }}
+                        style={{ ...nudgeBtn, opacity: i === 0 ? 0.3 : 1 }}
+                        title="上移"
+                      >↑</button>
+                      <button
+                        disabled={i === conditions.length - 1}
+                        onClick={() => {
+                          const next = [...conditions]
+                          ;[next[i], next[i + 1]] = [next[i + 1], next[i]]
+                          onConditionsChange(next)
+                        }}
+                        style={{ ...nudgeBtn, opacity: i === conditions.length - 1 ? 0.3 : 1 }}
+                        title="下移"
+                      >↓</button>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Input method controls */}
           <div style={{ ...ctrlRow, borderTop: '1px solid #1e2430' }}>

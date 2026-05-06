@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useI18n } from '../i18n'
 import type { SessionState } from '../App'
 import { METHOD_ZH } from '../types'
-import type { GazePoint, FaceEvent, EventLog } from '../types'
+import type { GazePoint, FaceEvent, EventLog, ConditionConfig } from '../types'
 import { centerColumn } from '../styles'
 import { InputController } from '../core/InputController'
 import { useGazeHitTest } from '../core/useGazeHitTest'
@@ -21,18 +21,20 @@ interface Props {
   toPixel: (g: GazePoint) => { x: number; y: number }
   addLog: (log: EventLog) => void
   onNext: () => void
-  onConditionChange: (index: number) => void
+  conditionIndex: number
+  onConditionAdvance: () => void
+  conditions?: ConditionConfig[]
 }
 
 const REST_SECS = 60
 
 export function ExperimentPage({
-  session, gaze, faceEvent, toPixel, addLog: addLogProp, onNext, onConditionChange,
+  session, gaze, faceEvent, toPixel, addLog: addLogProp, onNext,
+  conditionIndex, onConditionAdvance, conditions: conditionsProp,
 }: Props) {
   const { t } = useI18n()
   const [phase, setPhase] = useState<ExperimentPhase>('running')
   const [restSecsLeft, setRestSecsLeft] = useState(REST_SECS)
-  const [conditionIndex, setConditionIndex] = useState(session.experimenterConfig.startConditionIndex)
   const [, forceUpdate] = useState(0)
 
   const managerRef    = useRef(new ExperimentManager(session.participantId, session.experimenterConfig))
@@ -40,7 +42,7 @@ export function ExperimentPage({
 
   const manager   = managerRef.current
   const ppc       = manager.getPhrasesPerCondition()
-  const condition = manager.getConditionOrder()[conditionIndex]
+  const condition = (conditionsProp ?? manager.getConditionOrder())[conditionIndex]
 
   const { handleKeyRect, resetHitTracking } = useGazeHitTest({
     gaze, faceEvent, toPixel, controllerRef,
@@ -49,10 +51,6 @@ export function ExperimentPage({
   const addLog = (entry: Omit<EventLog, 'sessionId' | 'participantId'>) => {
     addLogProp({ ...entry, sessionId: session.sessionId, participantId: session.participantId })
   }
-
-  useEffect(() => {
-    onConditionChange(conditionIndex)
-  }, [conditionIndex, onConditionChange])
 
   useEffect(() => {
     const ctrl = controllerRef.current
@@ -67,6 +65,8 @@ export function ExperimentPage({
   }, [session.blinkMinMs, session.blinkMaxMs])
 
   useEffect(() => {
+    setPhase('running')
+    setRestSecsLeft(REST_SECS)
     controllerRef.current = new InputController(condition.inputMethod, session.smileThreshold, session.blinkMinMs ?? 150, session.blinkMaxMs ?? 300)
     const ctrl = controllerRef.current
     const isFirst = conditionIndex === session.experimenterConfig.startConditionIndex
@@ -126,12 +126,12 @@ export function ExperimentPage({
     if (phase !== 'resting') return
     const timer = setInterval(() => {
       setRestSecsLeft(s => {
-        if (s <= 1) { clearInterval(timer); setPhase('running'); setConditionIndex(i => i + 1); return REST_SECS }
+        if (s <= 1) { clearInterval(timer); onConditionAdvance(); return REST_SECS }
         return s - 1
       })
     }, 1000)
     return () => clearInterval(timer)
-  }, [phase])
+  }, [phase]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSurveySubmit = (answers: ConditionSurveyAnswers) => {
     addLog({
@@ -159,7 +159,7 @@ export function ExperimentPage({
   const phrase     = manager.getCurrentPhrase()
   const charIndex  = manager.getCharIndex()
 
-  const CANDIDATE_W = 88  // panel 72 + gap 16
+  const CANDIDATE_W = 88
   const contentW = window.innerWidth * 0.80
   const kbAvailW = contentW - 32 - CANDIDATE_W
   const kbAvailH = (window.innerHeight - 200) * 0.78
@@ -186,10 +186,7 @@ export function ExperimentPage({
         <p style={{ color: '#aaa', fontSize: 18 }}>
           {t('experiment.restMessage', { seconds: String(restSecsLeft) })}
         </p>
-        <button
-          onClick={() => { setPhase('running'); setConditionIndex(i => i + 1) }}
-          style={actionBtn}
-        >
+        <button onClick={onConditionAdvance} style={actionBtn}>
           {t('experiment.restSkip')}
         </button>
       </div>

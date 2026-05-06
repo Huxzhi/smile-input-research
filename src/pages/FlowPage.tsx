@@ -43,10 +43,6 @@ const saveStep = (pid: string, step: number) =>
 export function FlowPage({ session, addLog, onSetSession, onDone }: Props) {
   const pid = session.participantId
   const [step, setStep] = useState(session.initialFlowStep)
-  const [experimentConditionIndex, setExperimentConditionIndex] = useState(
-    session.experimenterConfig.startConditionIndex
-  )
-
   const videoRef  = useRef<HTMLVideoElement>(null)
   const cursorRef = useRef<HTMLDivElement>(null)
 
@@ -58,9 +54,12 @@ export function FlowPage({ session, addLog, onSetSession, onDone }: Props) {
     cursorRef,
   })
 
-  const conditionOrder = useRef(
-    new ExperimentManager(pid, session.experimenterConfig).getConditionOrder()
-  ).current
+  const [conditionIndex, setConditionIndex] = useState(
+    session.experimenterConfig.startConditionIndex
+  )
+  const [conditions, setConditions] = useState(
+    () => new ExperimentManager(pid, session.experimenterConfig).getConditionOrder()
+  )
 
   const [personalAnswers, setPersonalAnswers] = useStepCache<SurveyAnswers>(
     `step_personal_${pid}`, {}
@@ -118,8 +117,12 @@ export function FlowPage({ session, addLog, onSetSession, onDone }: Props) {
 
   const handleExperimentDone = () => advance(5)
 
-  const handleConditionChange = useCallback((index: number) => {
-    setExperimentConditionIndex(index)
+  const handleConditionAdvance = useCallback(() => {
+    setConditionIndex(i => i + 1)
+  }, [])
+
+  const handleConditionJump = useCallback((i: number) => {
+    setConditionIndex(i)
   }, [])
 
   const handleFinalSubmit = (answers: SurveyAnswers) => {
@@ -146,10 +149,10 @@ export function FlowPage({ session, addLog, onSetSession, onDone }: Props) {
     (step === 1 && !canProceedStep1) ||
     (step === 2 && !canProceedStep2)
 
-  const subSteps = step === 4 ? conditionOrder.map((cond, i) => ({
+  const subSteps = step === 4 ? conditions.map((cond, i) => ({
     label:  `${cond.layout.toUpperCase()}/${METHOD_ZH[cond.inputMethod]}`,
-    done:   i < experimentConditionIndex,
-    active: i === experimentConditionIndex,
+    done:   i < conditionIndex,
+    active: i === conditionIndex,
   })) : undefined
 
   return (
@@ -212,7 +215,9 @@ export function FlowPage({ session, addLog, onSetSession, onDone }: Props) {
             toPixel={toPixel}
             addLog={addLog}
             onNext={handleExperimentDone}
-            onConditionChange={handleConditionChange}
+            conditionIndex={conditionIndex}
+            onConditionAdvance={handleConditionAdvance}
+            conditions={conditions}
           />
         )}
 
@@ -259,12 +264,16 @@ export function FlowPage({ session, addLog, onSetSession, onDone }: Props) {
         smileThreshold={session.smileThreshold}
         blinkMinMs={session.blinkMinMs ?? 150}
         blinkMaxMs={session.blinkMaxMs ?? 300}
+        conditions={step === 4 ? conditions : undefined}
+        conditionIndex={step === 4 ? conditionIndex : undefined}
         onGazeModeChange={mode => onSetSession(s => ({ ...s, gazeMode: mode }))}
         onOffsetXChange={v  => onSetSession(s => ({ ...s, gazeOffsetX: v }))}
         onOffsetYChange={v  => onSetSession(s => ({ ...s, gazeOffsetY: v }))}
         onSmileThresholdChange={v => onSetSession(s => ({ ...s, smileThreshold: v }))}
         onBlinkMinChange={v => onSetSession(s => ({ ...s, blinkMinMs: v }))}
         onBlinkMaxChange={v => onSetSession(s => ({ ...s, blinkMaxMs: v }))}
+        onConditionJump={step === 4 ? handleConditionJump : undefined}
+        onConditionsChange={step === 4 ? setConditions : undefined}
       />
     </div>
   )
