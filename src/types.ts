@@ -132,9 +132,9 @@ export const PHRASES_PER_CONDITION = 5
 // Dwell time in ms
 export const DWELL_MS = 800
 // Blink min duration in ms (shorter = accidental, ignore)
-export const BLINK_MIN_MS = 150
+export const BLINK_MIN_MS = 200
 // Blink max duration in ms (longer = natural blink, ignore)
-export const BLINK_MAX_MS = 300
+export const BLINK_MAX_MS = 2000
 // Blink cooldown in ms
 export const BLINK_COOLDOWN_MS = 500
 // Smile trigger duration in ms

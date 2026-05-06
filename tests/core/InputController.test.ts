@@ -43,8 +43,8 @@ describe('InputController — Blink', () => {
     vi.advanceTimersByTime(CANDIDATE_DWELL_MS)  // key becomes ready candidate
 
     ctrl.feedEyeOpen(false)           // eye closes (Tobii/mouse)
-    vi.advanceTimersByTime(150)
-    ctrl.feedEyeOpen(true)            // eye opens → blink duration 150ms, within range
+    vi.advanceTimersByTime(250)
+    ctrl.feedEyeOpen(true)            // eye opens → blink duration 250ms, within range
     expect(fired).toEqual(['B'])
   })
 
