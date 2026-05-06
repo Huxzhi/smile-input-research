@@ -105,7 +105,7 @@ describe('ExperimentManager — config override', () => {
   it('without config, falls back to Latin square (backward compat)', () => {
     const mgr = new ExperimentManager('1')
     expect(mgr.getConditionOrder()[0].layout).toBe('qwerty')
-    expect(mgr.getPhrasesPerCondition()).toBe(15)
+    expect(mgr.getPhrasesPerCondition()).toBe(5)
   })
 
   it('isConditionComplete returns true after all ppc phrases done', () => {

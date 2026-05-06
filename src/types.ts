@@ -14,7 +14,7 @@ export interface ExperimenterConfig {
   conditionOrder: ConditionConfig[]
   startConditionIndex: number   // 0-based
   startPhraseIndex: number      // 0-based
-  phrasesPerCondition: number   // default 15
+  phrasesPerCondition: number   // default 5
 }
 
 export interface GazePoint {
@@ -126,8 +126,8 @@ export interface EventLog {
   tamPEOU?: string                // JSON.stringify({eou1,eou2,eou3}), values 1–7
 }
 
-// Phrases per condition (6 conditions × 15 = 90 total, non-overlapping across conditions)
-export const PHRASES_PER_CONDITION = 15
+// Phrases per condition (6 conditions × 5 = 30 total, non-overlapping across conditions)
+export const PHRASES_PER_CONDITION = 5
 
 // Dwell time in ms
 export const DWELL_MS = 800
