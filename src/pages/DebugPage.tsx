@@ -367,7 +367,7 @@ export function DebugPage({ onExport, displayLogs, addLog: addLogProp, clearLogs
 
         {/* Right panel: camera + face metrics */}
         <div style={{ width: PANEL_W, borderLeft: '1px solid #21262d', flexShrink: 0, overflow: 'hidden' }}>
-          <FaceDebugPanel videoRef={videoRef} faceEvent={faceEvent} gaze={gaze} embedded />
+          <FaceDebugPanel videoRef={videoRef} faceEvent={faceEvent} gaze={gaze} />
         </div>
       </div>
     </div>

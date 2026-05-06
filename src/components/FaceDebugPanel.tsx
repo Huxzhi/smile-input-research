@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import type { FaceEvent, GazePoint } from '../types'
 
-// ── Mouth / smile landmarks ────────────────────────────────────────────────
 const MOUTH_CORNERS = [61, 291]
 const UPPER_LIP = [61, 185, 40, 37, 0, 267, 270, 409, 291]
 const LOWER_LIP = [61, 146, 91, 84, 17, 314, 405, 375, 291]
@@ -62,33 +61,6 @@ export function FaceDebugPanel({ videoRef, faceEvent, gaze, embedded = false }: 
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const faceRef   = useRef<FaceEvent | null>(null)
   faceRef.current = faceEvent
-
-  // Floating-mode state
-  const [collapsed, setCollapsed] = useState(false)
-  const [pos, setPos] = useState(() => ({
-    x: window.innerWidth  - 256,
-    y: window.innerHeight - 360,
-  }))
-  const dragRef = useRef({ dragging: false, startX: 0, startY: 0, baseX: 0, baseY: 0 })
-
-  const onHeaderMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault()
-    dragRef.current = { dragging: true, startX: e.clientX, startY: e.clientY, baseX: pos.x, baseY: pos.y }
-    const onMove = (ev: MouseEvent) => {
-      if (!dragRef.current.dragging) return
-      setPos({
-        x: dragRef.current.baseX + ev.clientX - dragRef.current.startX,
-        y: dragRef.current.baseY + ev.clientY - dragRef.current.startY,
-      })
-    }
-    const onUp = () => {
-      dragRef.current.dragging = false
-      window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('mouseup', onUp)
-    }
-    window.addEventListener('mousemove', onMove)
-    window.addEventListener('mouseup', onUp)
-  }
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -166,41 +138,12 @@ export function FaceDebugPanel({ videoRef, faceEvent, gaze, embedded = false }: 
     </>
   )
 
-  if (embedded) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'row', gap: 12, padding: 8, alignItems: 'flex-start' }}>
-        <canvas ref={canvasRef} width={cW} height={cH} style={{ borderRadius: 6, display: 'block', flexShrink: 0 }} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
-          {metrics}
-        </div>
-      </div>
-    )
-  }
-
-  // Floating mode
   return (
-    <div style={{ ...floatingBase, left: pos.x, top: pos.y }}>
-      {/* Drag handle + collapse toggle */}
-      <div
-        onMouseDown={onHeaderMouseDown}
-        style={headerStyle}
-      >
-        <span style={{ fontSize: 10, color: '#666', letterSpacing: 1, userSelect: 'none' }}>脸部参数</span>
-        <button
-          onMouseDown={e => e.stopPropagation()}
-          onClick={() => setCollapsed(v => !v)}
-          style={collapseBtn}
-        >
-          {collapsed ? '▲' : '▼'}
-        </button>
+    <div style={{ display: 'flex', flexDirection: 'row', gap: 12, padding: 8, alignItems: 'flex-start' }}>
+      <canvas ref={canvasRef} width={cW} height={cH} style={{ borderRadius: 6, display: 'block', flexShrink: 0 }} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
+        {metrics}
       </div>
-
-      {!collapsed && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 7, paddingTop: 6 }}>
-          <canvas ref={canvasRef} width={cW} height={cH} style={{ borderRadius: 6, display: 'block' }} />
-          {metrics}
-        </div>
-      )}
     </div>
   )
 }
@@ -232,33 +175,4 @@ function eyeIndicator(label: string, open: boolean) {
       </span>
     </div>
   )
-}
-
-const floatingBase: React.CSSProperties = {
-  position: 'fixed',
-  background: 'rgba(10, 10, 20, 0.92)',
-  border: '1px solid #222',
-  borderRadius: 10,
-  padding: 8,
-  zIndex: 9990,
-  boxShadow: '0 4px 20px rgba(0,0,0,0.6)',
-  minWidth: 240,
-}
-
-const headerStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  cursor: 'move',
-  padding: '0 2px',
-}
-
-const collapseBtn: React.CSSProperties = {
-  background: 'transparent',
-  border: 'none',
-  color: '#555',
-  fontSize: 11,
-  cursor: 'pointer',
-  padding: '0 2px',
-  lineHeight: 1,
 }

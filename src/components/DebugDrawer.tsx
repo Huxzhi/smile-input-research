@@ -44,7 +44,7 @@ export function DebugDrawer({ videoRef, faceEvent, gaze }: Props) {
       </div>
       {open && (
         <div style={{ borderTop: '1px solid #1e2430' }}>
-          <FaceDebugPanel videoRef={videoRef} faceEvent={faceEvent} gaze={gaze} embedded />
+          <FaceDebugPanel videoRef={videoRef} faceEvent={faceEvent} gaze={gaze} />
         </div>
       )}
     </div>
