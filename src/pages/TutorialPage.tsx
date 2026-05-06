@@ -3,6 +3,7 @@ import { useI18n } from '../i18n'
 import { InputController } from '../core/InputController'
 import { useGazeHitTest } from '../core/useGazeHitTest'
 import { QwertyKeyboard, computeQwertyKeySize } from '../components/keyboards/QwertyKeyboard'
+import { CandidatePanel } from '../components/CandidatePanel'
 import type { InputMethod, FaceEvent, GazePoint } from '../types'
 import { centerColumn } from '../styles'
 
@@ -11,6 +12,8 @@ interface Props {
   faceEvent: FaceEvent | null
   toPixel: (g: GazePoint) => { x: number; y: number }
   onNext: (smileCalibPeak: number, smileThreshold: number) => void
+  blinkMinMs?: number
+  blinkMaxMs?: number
 }
 
 type Step = 'smile-calib' | 'dwell-practice' | 'blink-practice' | 'smile-practice'
@@ -35,7 +38,7 @@ const btnStyle = (bg: string, enabled = true): React.CSSProperties => ({
   fontSize: 16, cursor: enabled ? 'pointer' : 'not-allowed',
 })
 
-export function TutorialPage({ gaze, faceEvent, toPixel, onNext }: Props) {
+export function TutorialPage({ gaze, faceEvent, toPixel, onNext, blinkMinMs = 150, blinkMaxMs = 300 }: Props) {
   const { t } = useI18n()
   const [step, setStep] = useState<Step>('smile-calib')
   const [calibrating, setCalibrating] = useState(false)
@@ -67,7 +70,7 @@ export function TutorialPage({ gaze, faceEvent, toPixel, onNext }: Props) {
     const method = STEP_METHOD[step]
     if (!method) { controllerRef.current = null; return }
     resetHitTracking()
-    const ctrl = new InputController(method, thresholdRef.current)
+    const ctrl = new InputController(method, thresholdRef.current, blinkMinMs, blinkMaxMs)
     controllerRef.current = ctrl
 
     const unsub = ctrl.onInput(() => {
@@ -86,6 +89,10 @@ export function TutorialPage({ gaze, faceEvent, toPixel, onNext }: Props) {
 
     return unsub
   }, [step]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    controllerRef.current?.setBlinkTiming(blinkMinMs, blinkMaxMs)
+  }, [blinkMinMs, blinkMaxMs])
 
   const runCalibration = () => {
     setCalibrating(true)
@@ -145,11 +152,14 @@ export function TutorialPage({ gaze, faceEvent, toPixel, onNext }: Props) {
     )
   }
 
-  const ctrl       = controllerRef.current
-  const targetChar = PRACTICE_CHARS[practiceIdx]
-  const kbAvailW   = window.innerWidth * 0.80 - 32
-  const kbAvailH   = window.innerHeight * 0.60
-  const keySize    = computeQwertyKeySize(kbAvailW, kbAvailH)
+  const ctrl        = controllerRef.current
+  const currentStep = step
+  const targetChar  = PRACTICE_CHARS[practiceIdx]
+  const CANDIDATE_W = 88
+  const kbAvailW    = window.innerWidth * 0.80 - 32 - CANDIDATE_W
+  const kbAvailH    = window.innerHeight * 0.60
+  const keySize     = computeQwertyKeySize(kbAvailW, kbAvailH)
+  const inputMethod: InputMethod = STEP_METHOD[currentStep] ?? 'dwell'
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 20, gap: 16 }}>
@@ -169,21 +179,15 @@ export function TutorialPage({ gaze, faceEvent, toPixel, onNext }: Props) {
         {practiceIdx + 1} / {PRACTICE_CHARS.length}
       </p>
 
-      {step === 'smile-practice' && ctrl && (
-        <div style={{ fontSize: 13, color: '#f1fa8c' }}>
-          😊 {(ctrl.getSmileScore() * 100).toFixed(0)}%
-          {ctrl.getLockedKey() && (
-            <span style={{ marginLeft: 12, color: '#f1fa8c' }}>🔒 {ctrl.getLockedKey()}</span>
-          )}
-        </div>
-      )}
-
-      {ctrl && (
-        <QwertyKeyboard
-          controller={ctrl} gaze={gaze} targetChar={targetChar}
-          onKeyRect={handleKeyRect} keySize={keySize} showTarget
-        />
-      )}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <CandidatePanel ctrl={ctrl} inputMethod={inputMethod} />
+        {ctrl && (
+          <QwertyKeyboard
+            controller={ctrl} gaze={gaze} targetChar={targetChar}
+            onKeyRect={handleKeyRect} keySize={keySize} showTarget
+          />
+        )}
+      </div>
 
       <button onClick={advancePractice} style={btnStyle('#444')}>
         {practiceIdx < PRACTICE_CHARS.length - 1 ? t('tutorial.practice') : t('tutorial.practiceComplete')}

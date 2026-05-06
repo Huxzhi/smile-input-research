@@ -10,6 +10,7 @@ import { ExperimentManager } from '../core/ExperimentManager'
 import { QwertyKeyboard, computeQwertyKeySize } from '../components/keyboards/QwertyKeyboard'
 import { OptiKeyboard, computeOptiKeySize } from '../components/keyboards/OptiKeyboard'
 import { ConditionSurvey, type ConditionSurveyAnswers } from '../components/ConditionSurvey'
+import { CandidatePanel } from '../components/CandidatePanel'
 
 type ExperimentPhase = 'running' | 'condition-survey' | 'resting'
 
@@ -54,7 +55,19 @@ export function ExperimentPage({
   }, [conditionIndex, onConditionChange])
 
   useEffect(() => {
-    controllerRef.current = new InputController(condition.inputMethod, session.smileThreshold)
+    const ctrl = controllerRef.current
+    if (!ctrl) return
+    ctrl.setSmileThreshold(session.smileThreshold)
+  }, [session.smileThreshold])
+
+  useEffect(() => {
+    const ctrl = controllerRef.current
+    if (!ctrl) return
+    ctrl.setBlinkTiming(session.blinkMinMs ?? 150, session.blinkMaxMs ?? 300)
+  }, [session.blinkMinMs, session.blinkMaxMs])
+
+  useEffect(() => {
+    controllerRef.current = new InputController(condition.inputMethod, session.smileThreshold, session.blinkMinMs ?? 150, session.blinkMaxMs ?? 300)
     const ctrl = controllerRef.current
     const isFirst = conditionIndex === session.experimenterConfig.startConditionIndex
     manager.startCondition(conditionIndex, isFirst ? session.experimenterConfig.startPhraseIndex : 0)
@@ -146,8 +159,9 @@ export function ExperimentPage({
   const phrase     = manager.getCurrentPhrase()
   const charIndex  = manager.getCharIndex()
 
+  const CANDIDATE_W = 88  // panel 72 + gap 16
   const contentW = window.innerWidth * 0.80
-  const kbAvailW = contentW - 32
+  const kbAvailW = contentW - 32 - CANDIDATE_W
   const kbAvailH = (window.innerHeight - 200) * 0.78
   const keySize  = condition.layout === 'qwerty'
     ? computeQwertyKeySize(kbAvailW, kbAvailH)
@@ -204,20 +218,14 @@ export function ExperimentPage({
         ))}
       </div>
 
-      {condition.inputMethod === 'smile' && ctrl && (
-        <div style={{ fontSize: 13, color: '#f1fa8c' }}>
-          😊 {(ctrl.getSmileScore() * 100).toFixed(0)}%
-          {ctrl.getLockedKey() && (
-            <span style={{ marginLeft: 12 }}>🔒 {ctrl.getLockedKey()}</span>
-          )}
-        </div>
-      )}
-
-      {ctrl && (
-        condition.layout === 'qwerty'
-          ? <QwertyKeyboard controller={ctrl} gaze={gaze} targetChar={targetChar} onKeyRect={handleKeyRect} keySize={keySize} />
-          : <OptiKeyboard   controller={ctrl} gaze={gaze} targetChar={targetChar} onKeyRect={handleKeyRect} keySize={keySize} />
-      )}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <CandidatePanel ctrl={ctrl} inputMethod={condition.inputMethod} />
+        {ctrl && (
+          condition.layout === 'qwerty'
+            ? <QwertyKeyboard controller={ctrl} gaze={gaze} targetChar={targetChar} onKeyRect={handleKeyRect} keySize={keySize} />
+            : <OptiKeyboard   controller={ctrl} gaze={gaze} targetChar={targetChar} onKeyRect={handleKeyRect} keySize={keySize} />
+        )}
+      </div>
     </div>
   )
 }

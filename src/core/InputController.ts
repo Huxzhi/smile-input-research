@@ -18,9 +18,10 @@ export class InputController {
 
   // Blink
   private blinkStart: number | null = null
+  private blinkCandidateKey: string | null = null
+  private blinkCandidateGaze: GazePoint | null = null
   private blinkCooldownUntil: number = 0
   private lastEyeOpen: boolean = true
-  private usingTobiiEyeOpen: boolean = false
 
   // Smile
   private smileStart: number | null = null
@@ -90,11 +91,9 @@ export class InputController {
     }
   }
 
-  // Called with Tobii eye_open data or mouse button simulation.
-  // Once called, suppresses camera-based blink detection for this controller instance.
+  // Called with Tobii eye_open data or mouse button simulation (left/right click).
   feedEyeOpen(eyeOpen: boolean) {
     if (this.method !== 'blink') return
-    this.usingTobiiEyeOpen = true
     this.processEyeOpen(eyeOpen)
   }
 
@@ -105,26 +104,24 @@ export class InputController {
 
     if (!eyeOpen && wasOpen && now >= this.blinkCooldownUntil) {
       this.blinkStart = now
+      // Lock candidate at blink start — prevents eye-drift from changing target
+      this.blinkCandidateKey = this.focusedKey
+      this.blinkCandidateGaze = this.focusedGaze
     } else if (eyeOpen && !wasOpen && this.blinkStart !== null) {
       const dur = now - this.blinkStart
-      if (dur >= this.blinkMinMs && dur < this.blinkMaxMs && this.focusedKey && this.focusedGaze) {
+      if (dur >= this.blinkMinMs && dur < this.blinkMaxMs && this.blinkCandidateKey && this.blinkCandidateGaze) {
         this.blinkCooldownUntil = now + BLINK_COOLDOWN_MS
-        this.fire(this.focusedKey, this.focusedGaze, null, dur)
+        this.fire(this.blinkCandidateKey, this.blinkCandidateGaze, null, dur)
       }
       this.blinkStart = null
+      this.blinkCandidateKey = null
+      this.blinkCandidateGaze = null
     }
   }
 
   feedFace(face: FaceEvent) {
     this.lastFace = face
     const now = Date.now()
-
-    // Camera blink detection — disabled once Tobii/mouse feeds eye_open
-    if (this.method === 'blink' && !this.usingTobiiEyeOpen) {
-      const BLINK_THRESHOLD = 0.5
-      const eyeOpen = Math.max(face.blinkLeft, face.blinkRight) < BLINK_THRESHOLD
-      this.processEyeOpen(eyeOpen)
-    }
 
     if (this.method === 'smile') {
       const smiling = face.smileScore >= this.smileThreshold
@@ -146,6 +143,15 @@ export class InputController {
     }
   }
 
+  setSmileThreshold(v: number) {
+    this.smileThreshold = v
+  }
+
+  setBlinkTiming(minMs: number, maxMs: number) {
+    this.blinkMinMs = minMs
+    this.blinkMaxMs = maxMs
+  }
+
   getDwellProgress(key: string): number {
     if (this.method !== 'dwell' || this.focusedKey !== key || !this.dwellTimer) return 0
     return Math.min((Date.now() - this.dwellStart) / DWELL_MS, 1)
@@ -157,6 +163,22 @@ export class InputController {
 
   getLockedKey(): string | null {
     return this.lockedKey
+  }
+
+  getFocusedKey(): string | null {
+    return this.focusedKey
+  }
+
+  getCandidateKey(): string | null {
+    if (this.method === 'blink')  return this.blinkCandidateKey ?? this.focusedKey
+    if (this.method === 'smile')  return this.lockedKey ?? this.focusedKey
+    return this.focusedKey
+  }
+
+  isCandidateLocked(): boolean {
+    if (this.method === 'blink') return this.blinkCandidateKey !== null
+    if (this.method === 'smile') return this.lockedKey !== null
+    return false
   }
 
   private fire(key: string, gaze: GazePoint, dwellDuration: number | null, blinkDuration: number | null = null) {

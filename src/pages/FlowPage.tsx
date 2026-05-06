@@ -50,7 +50,7 @@ export function FlowPage({ session, addLog, onSetSession, onDone }: Props) {
   const videoRef  = useRef<HTMLVideoElement>(null)
   const cursorRef = useRef<HTMLDivElement>(null)
 
-  const { gaze, faceEvent, toPixel } = useInputSource({
+  const { gaze, faceEvent, gazeStatus, toPixel } = useInputSource({
     gazeMode: session.gazeMode,
     offsetX:  session.gazeOffsetX ?? 0,
     offsetY:  session.gazeOffsetY ?? 0,
@@ -163,6 +163,7 @@ export function FlowPage({ session, addLog, onSetSession, onDone }: Props) {
         completedSteps={completedSteps}
         onStepClick={handleStepClick}
         subSteps={subSteps}
+        participantId={session.participantId}
       />
 
       <div style={{ flex: 1, overflowY: 'auto' }}>
@@ -198,6 +199,8 @@ export function FlowPage({ session, addLog, onSetSession, onDone }: Props) {
             faceEvent={faceEvent}
             toPixel={toPixel}
             onNext={handleCalibDone}
+            blinkMinMs={session.blinkMinMs ?? 150}
+            blinkMaxMs={session.blinkMaxMs ?? 300}
           />
         )}
 
@@ -245,7 +248,24 @@ export function FlowPage({ session, addLog, onSetSession, onDone }: Props) {
         </div>
       )}
 
-      <DebugDrawer videoRef={videoRef} faceEvent={faceEvent} gaze={gaze} />
+      <DebugDrawer
+        videoRef={videoRef}
+        faceEvent={faceEvent}
+        gaze={gaze}
+        gazeMode={session.gazeMode}
+        gazeStatus={gazeStatus}
+        offsetX={session.gazeOffsetX ?? 0}
+        offsetY={session.gazeOffsetY ?? 0}
+        smileThreshold={session.smileThreshold}
+        blinkMinMs={session.blinkMinMs ?? 150}
+        blinkMaxMs={session.blinkMaxMs ?? 300}
+        onGazeModeChange={mode => onSetSession(s => ({ ...s, gazeMode: mode }))}
+        onOffsetXChange={v  => onSetSession(s => ({ ...s, gazeOffsetX: v }))}
+        onOffsetYChange={v  => onSetSession(s => ({ ...s, gazeOffsetY: v }))}
+        onSmileThresholdChange={v => onSetSession(s => ({ ...s, smileThreshold: v }))}
+        onBlinkMinChange={v => onSetSession(s => ({ ...s, blinkMinMs: v }))}
+        onBlinkMaxChange={v => onSetSession(s => ({ ...s, blinkMaxMs: v }))}
+      />
     </div>
   )
 }

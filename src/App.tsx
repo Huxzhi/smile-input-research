@@ -11,6 +11,8 @@ export interface SessionState {
   sessionId: string
   smileCalibPeak: number
   smileThreshold: number
+  blinkMinMs: number
+  blinkMaxMs: number
   gazeOffsetX: number
   gazeOffsetY: number
   gazeMode: 'tobii' | 'mouse'

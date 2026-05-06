@@ -41,9 +41,9 @@ describe('InputController — Blink', () => {
     ctrl.onInput((e) => fired.push(e.key))
     ctrl.setFocusedKey('B', { x: 0.3, y: 0.4, ts: 0 })
 
-    ctrl.feedFace({ smileScore: 0, blinkLeft: 0.9, blinkRight: 0.9, ts: 100 })
+    ctrl.feedEyeOpen(false)           // eye closes (Tobii/mouse)
     vi.advanceTimersByTime(150)
-    ctrl.feedFace({ smileScore: 0, blinkLeft: 0.1, blinkRight: 0.1, ts: 250 })
+    ctrl.feedEyeOpen(true)            // eye opens → blink duration 150ms, within range
     expect(fired).toEqual(['B'])
   })
 
@@ -53,9 +53,9 @@ describe('InputController — Blink', () => {
     ctrl.onInput((e) => fired.push(e.key))
     ctrl.setFocusedKey('B', { x: 0.3, y: 0.4, ts: 0 })
 
-    ctrl.feedFace({ smileScore: 0, blinkLeft: 0.9, blinkRight: 0.9, ts: 100 })
+    ctrl.feedEyeOpen(false)
     vi.advanceTimersByTime(BLINK_MAX_MS + 50)
-    ctrl.feedFace({ smileScore: 0, blinkLeft: 0.1, blinkRight: 0.1, ts: 100 + BLINK_MAX_MS + 50 })
+    ctrl.feedEyeOpen(true)
     expect(fired).toHaveLength(0)
   })
 })
