@@ -139,5 +139,7 @@ export const BLINK_MAX_MS = 300
 export const BLINK_COOLDOWN_MS = 500
 // Smile trigger duration in ms
 export const SMILE_HOLD_MS = 300
-// Smile position lock dwell in ms
-export const SMILE_LOCK_MS = 200
+// Dwell required before a key becomes candidate (blink & smile)
+export const CANDIDATE_DWELL_MS = 1000
+// Smile position lock dwell in ms (same as candidate dwell)
+export const SMILE_LOCK_MS = CANDIDATE_DWELL_MS

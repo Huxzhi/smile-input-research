@@ -1,5 +1,5 @@
 import type { GazePoint, FaceEvent, InputFiredEvent, InputMethod } from '../types'
-import { DWELL_MS, BLINK_MIN_MS, BLINK_MAX_MS, BLINK_COOLDOWN_MS, SMILE_HOLD_MS, SMILE_LOCK_MS } from '../types'
+import { DWELL_MS, BLINK_MIN_MS, BLINK_MAX_MS, BLINK_COOLDOWN_MS, SMILE_HOLD_MS, SMILE_LOCK_MS, CANDIDATE_DWELL_MS } from '../types'
 
 type InputCallback = (event: InputFiredEvent) => void
 
@@ -22,6 +22,9 @@ export class InputController {
   private blinkCandidateGaze: GazePoint | null = null
   private blinkCooldownUntil: number = 0
   private lastEyeOpen: boolean = true
+  private blinkDwellTimer: ReturnType<typeof setTimeout> | null = null
+  private blinkReadyKey: string | null = null
+  private blinkReadyGaze: GazePoint | null = null
 
   // Smile
   private smileStart: number | null = null
@@ -60,6 +63,16 @@ export class InputController {
       }, DWELL_MS)
     }
 
+    if (this.method === 'blink') {
+      if (this.blinkDwellTimer) clearTimeout(this.blinkDwellTimer)
+      this.blinkReadyKey = null
+      this.blinkReadyGaze = null
+      this.blinkDwellTimer = setTimeout(() => {
+        this.blinkReadyKey = key
+        this.blinkReadyGaze = gaze
+      }, CANDIDATE_DWELL_MS)
+    }
+
     if (this.method === 'smile') {
       if (this.smileLockTimer) clearTimeout(this.smileLockTimer)
       this.smileLockTimer = setTimeout(() => {
@@ -77,6 +90,10 @@ export class InputController {
     if (this.method === 'dwell' && this.dwellTimer) {
       clearTimeout(this.dwellTimer)
       this.dwellTimer = null
+    }
+    if (this.method === 'blink') {
+      if (this.blinkDwellTimer) { clearTimeout(this.blinkDwellTimer); this.blinkDwellTimer = null }
+      if (this.blinkReadyKey === key) { this.blinkReadyKey = null; this.blinkReadyGaze = null }
     }
     if (this.method === 'smile') {
       if (this.smileLockTimer) {
@@ -104,9 +121,9 @@ export class InputController {
 
     if (!eyeOpen && wasOpen && now >= this.blinkCooldownUntil) {
       this.blinkStart = now
-      // Lock candidate at blink start — prevents eye-drift from changing target
-      this.blinkCandidateKey = this.focusedKey
-      this.blinkCandidateGaze = this.focusedGaze
+      // Lock candidate at blink start using the pre-dwelled ready key
+      this.blinkCandidateKey = this.blinkReadyKey
+      this.blinkCandidateGaze = this.blinkReadyGaze
     } else if (eyeOpen && !wasOpen && this.blinkStart !== null) {
       const dur = now - this.blinkStart
       if (dur >= this.blinkMinMs && dur < this.blinkMaxMs && this.blinkCandidateKey && this.blinkCandidateGaze) {
@@ -170,8 +187,8 @@ export class InputController {
   }
 
   getCandidateKey(): string | null {
-    if (this.method === 'blink')  return this.blinkCandidateKey ?? this.focusedKey
-    if (this.method === 'smile')  return this.lockedKey ?? this.focusedKey
+    if (this.method === 'blink')  return this.blinkCandidateKey ?? this.blinkReadyKey
+    if (this.method === 'smile')  return this.lockedKey
     return this.focusedKey
   }
 

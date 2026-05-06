@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { InputController } from '../../src/core/InputController'
-import { DWELL_MS, BLINK_MAX_MS, BLINK_COOLDOWN_MS, SMILE_HOLD_MS, SMILE_LOCK_MS } from '../../src/types'
+import { DWELL_MS, BLINK_MAX_MS, BLINK_COOLDOWN_MS, SMILE_HOLD_MS, SMILE_LOCK_MS, CANDIDATE_DWELL_MS } from '../../src/types'
 
 describe('InputController — Dwell', () => {
   beforeEach(() => { vi.useFakeTimers() })
@@ -35,11 +35,12 @@ describe('InputController — Blink', () => {
   beforeEach(() => { vi.useFakeTimers() })
   afterEach(() => { vi.useRealTimers() })
 
-  it('fires on blink under BLINK_MAX_MS while key focused', () => {
+  it('fires on blink under BLINK_MAX_MS after candidate dwell', () => {
     const ctrl = new InputController('blink')
     const fired: string[] = []
     ctrl.onInput((e) => fired.push(e.key))
-    ctrl.setFocusedKey('B', { x: 0.3, y: 0.4, ts: 0 })
+    ctrl.gazeEnterKey('B', { x: 0.3, y: 0.4, ts: 0 })
+    vi.advanceTimersByTime(CANDIDATE_DWELL_MS)  // key becomes ready candidate
 
     ctrl.feedEyeOpen(false)           // eye closes (Tobii/mouse)
     vi.advanceTimersByTime(150)
@@ -47,11 +48,25 @@ describe('InputController — Blink', () => {
     expect(fired).toEqual(['B'])
   })
 
+  it('does not fire blink before candidate dwell completes', () => {
+    const ctrl = new InputController('blink')
+    const fired: string[] = []
+    ctrl.onInput((e) => fired.push(e.key))
+    ctrl.gazeEnterKey('B', { x: 0.3, y: 0.4, ts: 0 })
+    vi.advanceTimersByTime(CANDIDATE_DWELL_MS - 100)  // not ready yet
+
+    ctrl.feedEyeOpen(false)
+    vi.advanceTimersByTime(150)
+    ctrl.feedEyeOpen(true)
+    expect(fired).toHaveLength(0)
+  })
+
   it('ignores blink over BLINK_MAX_MS (natural blink)', () => {
     const ctrl = new InputController('blink')
     const fired: string[] = []
     ctrl.onInput((e) => fired.push(e.key))
-    ctrl.setFocusedKey('B', { x: 0.3, y: 0.4, ts: 0 })
+    ctrl.gazeEnterKey('B', { x: 0.3, y: 0.4, ts: 0 })
+    vi.advanceTimersByTime(CANDIDATE_DWELL_MS)
 
     ctrl.feedEyeOpen(false)
     vi.advanceTimersByTime(BLINK_MAX_MS + 50)
