@@ -1,18 +1,15 @@
 import { useState, useEffect, useRef } from 'react'
 import { useI18n } from '../i18n'
 import { InputController } from '../core/InputController'
-import { useGazeInput } from '../core/useGazeInput'
-import { GazeCursor } from '../components/GazeCursor'
-import { FaceDebugPanel } from '../components/FaceDebugPanel'
+import { useGazeHitTest } from '../core/useGazeHitTest'
 import { QwertyKeyboard, computeQwertyKeySize } from '../components/keyboards/QwertyKeyboard'
-import type { InputMethod, FaceEvent } from '../types'
+import type { InputMethod, FaceEvent, GazePoint } from '../types'
 import { centerColumn } from '../styles'
 
 interface Props {
-  participantId: string
-  gazeOffsetX?: number
-  gazeOffsetY?: number
-  gazeMode?: 'tobii' | 'mouse'
+  gaze: GazePoint | null
+  faceEvent: FaceEvent | null
+  toPixel: (g: GazePoint) => { x: number; y: number }
   onNext: (smileCalibPeak: number, smileThreshold: number) => void
 }
 
@@ -20,7 +17,7 @@ type Step = 'smile-calib' | 'dwell-practice' | 'blink-practice' | 'smile-practic
 
 const PRACTICE_CHARS = ['e', 't', 'a']
 const INSTRUCTION_KEY: Record<Step, string> = {
-  'smile-calib': 'smileCalibInstruction',
+  'smile-calib':    'smileCalibInstruction',
   'dwell-practice': 'dwellInstruction',
   'blink-practice': 'blinkInstruction',
   'smile-practice': 'smileInstruction',
@@ -38,7 +35,7 @@ const btnStyle = (bg: string, enabled = true): React.CSSProperties => ({
   fontSize: 16, cursor: enabled ? 'pointer' : 'not-allowed',
 })
 
-export function TutorialPage({ gazeOffsetX = 0, gazeOffsetY = 0, gazeMode = 'tobii', onNext }: Props) {
+export function TutorialPage({ gaze, faceEvent, toPixel, onNext }: Props) {
   const { t } = useI18n()
   const [step, setStep] = useState<Step>('smile-calib')
   const [calibrating, setCalibrating] = useState(false)
@@ -47,32 +44,25 @@ export function TutorialPage({ gazeOffsetX = 0, gazeOffsetY = 0, gazeMode = 'tob
   const [practiceIdx, setPracticeIdx] = useState(0)
   const [, forceUpdate] = useState(0)
 
-  const faceRef = useRef<FaceEvent | null>(null)
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const controllerRef = useRef<InputController | null>(null)
-  const cursorRef = useRef<HTMLDivElement>(null)
-  const thresholdRef = useRef(0)
+  const faceRef        = useRef<FaceEvent | null>(null)
+  const controllerRef  = useRef<InputController | null>(null)
+  const thresholdRef   = useRef(0)
   const practiceIdxRef = useRef(0)
-  const stepRef = useRef<Step>('smile-calib')
-  const peakSmileRef = useRef(0)
+  const stepRef        = useRef<Step>('smile-calib')
+  const peakSmileRef   = useRef(0)
 
-  thresholdRef.current = threshold
+  faceRef.current        = faceEvent
+  thresholdRef.current   = threshold
   practiceIdxRef.current = practiceIdx
-  stepRef.current = step
-  peakSmileRef.current = peakSmile
+  stepRef.current        = step
+  peakSmileRef.current   = peakSmile
 
-  const { gaze, faceEvent, handleKeyRect, resetHitTracking } = useGazeInput({
-    gazeMode: gazeMode ?? 'tobii',
-    offsetX: gazeOffsetX,
-    offsetY: gazeOffsetY,
-    videoRef,
-    cursorRef,
-    controllerRef,
-  })
-  faceRef.current = faceEvent
   const smileScore = faceEvent?.smileScore ?? 0
 
-  // Reinitialize InputController when practice step changes
+  const { handleKeyRect, resetHitTracking } = useGazeHitTest({
+    gaze, faceEvent, toPixel, controllerRef,
+  })
+
   useEffect(() => {
     const method = STEP_METHOD[step]
     if (!method) { controllerRef.current = null; return }
@@ -81,15 +71,15 @@ export function TutorialPage({ gazeOffsetX = 0, gazeOffsetY = 0, gazeMode = 'tob
     controllerRef.current = ctrl
 
     const unsub = ctrl.onInput(() => {
-      const idx = practiceIdxRef.current
+      const idx         = practiceIdxRef.current
       const currentStep = stepRef.current
       if (idx < PRACTICE_CHARS.length - 1) {
         setPracticeIdx(i => i + 1)
       } else {
         setPracticeIdx(0)
-        if (currentStep === 'dwell-practice') setStep('blink-practice')
-        else if (currentStep === 'blink-practice') setStep('smile-practice')
-        else if (currentStep === 'smile-practice') onNext(peakSmileRef.current, thresholdRef.current)
+        if (currentStep === 'dwell-practice')       setStep('blink-practice')
+        else if (currentStep === 'blink-practice')  setStep('smile-practice')
+        else if (currentStep === 'smile-practice')  onNext(peakSmileRef.current, thresholdRef.current)
       }
       forceUpdate(n => n + 1)
     })
@@ -116,17 +106,14 @@ export function TutorialPage({ gazeOffsetX = 0, gazeOffsetY = 0, gazeMode = 'tob
   const advancePractice = () => {
     if (practiceIdx < PRACTICE_CHARS.length - 1) { setPracticeIdx(i => i + 1); return }
     setPracticeIdx(0)
-    if (step === 'dwell-practice') setStep('blink-practice')
-    else if (step === 'blink-practice') setStep('smile-practice')
-    else if (step === 'smile-practice') onNext(peakSmile, threshold)
+    if (step === 'dwell-practice')       setStep('blink-practice')
+    else if (step === 'blink-practice')  setStep('smile-practice')
+    else if (step === 'smile-practice')  onNext(peakSmile, threshold)
   }
 
   if (step === 'smile-calib') {
     return (
       <div style={centerColumn}>
-        <video ref={videoRef} style={{ display: 'none' }} />
-        <GazeCursor ref={cursorRef} />
-        <FaceDebugPanel videoRef={videoRef} faceEvent={faceEvent} gaze={gaze} />
         <h2>{t('tutorial.smileCalib')}</h2>
         <p style={{ color: '#888' }}>{t('tutorial.smileCalibInstruction')}</p>
         <div style={{ fontSize: 32, color: '#f1fa8c', fontVariantNumeric: 'tabular-nums' }}>
@@ -158,18 +145,14 @@ export function TutorialPage({ gazeOffsetX = 0, gazeOffsetY = 0, gazeMode = 'tob
     )
   }
 
-  const ctrl = controllerRef.current
+  const ctrl       = controllerRef.current
   const targetChar = PRACTICE_CHARS[practiceIdx]
-  const kbAvailW = Math.min(window.innerWidth - 32, window.innerWidth * 0.80)
-  const kbAvailH = window.innerHeight * 0.65
-  const keySize = computeQwertyKeySize(kbAvailW, kbAvailH)
+  const kbAvailW   = window.innerWidth * 0.80 - 32
+  const kbAvailH   = window.innerHeight * 0.60
+  const keySize    = computeQwertyKeySize(kbAvailW, kbAvailH)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: '100vh', paddingTop: 20, gap: 16 }}>
-      <video ref={videoRef} style={{ display: 'none' }} />
-      <GazeCursor ref={cursorRef} />
-      <FaceDebugPanel videoRef={videoRef} faceEvent={faceEvent} />
-
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 20, gap: 16 }}>
       <h2 style={{ margin: 0 }}>{t('tutorial.title')}</h2>
       <p style={{ color: '#888', textAlign: 'center', maxWidth: 480, margin: 0 }}>
         {t(`tutorial.${INSTRUCTION_KEY[step]}`)}
@@ -208,4 +191,3 @@ export function TutorialPage({ gazeOffsetX = 0, gazeOffsetY = 0, gazeMode = 'tob
     </div>
   )
 }
-
