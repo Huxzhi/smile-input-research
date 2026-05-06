@@ -93,18 +93,11 @@ export class InputController {
     }
     if (this.method === 'blink') {
       if (this.blinkDwellTimer) { clearTimeout(this.blinkDwellTimer); this.blinkDwellTimer = null }
-      if (this.blinkReadyKey === key) { this.blinkReadyKey = null; this.blinkReadyGaze = null }
+      // blinkReadyKey persists until a new key completes its dwell
     }
     if (this.method === 'smile') {
-      if (this.smileLockTimer) {
-        clearTimeout(this.smileLockTimer)
-        this.smileLockTimer = null
-      }
-      if (this.lockedKey === key) {
-        this.lockedKey = null
-        this.lockedGaze = null
-        this.smileStart = null
-      }
+      if (this.smileLockTimer) { clearTimeout(this.smileLockTimer); this.smileLockTimer = null }
+      // lockedKey persists until a new key completes its dwell
     }
   }
 
