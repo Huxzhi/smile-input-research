@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { isComplete } from '../surveys/types'
 import type { SurveyAnswers } from '../surveys/types'
 import { loadJSON, saveJSON, removeJSON } from '../utils/storage'
@@ -7,9 +7,14 @@ import { SurveyForm } from '../components/SurveyForm'
 import { WelcomePage } from './WelcomePage'
 import { TutorialPage } from './TutorialPage'
 import { ExperimentPage } from './ExperimentPage'
+import { GazeCursor } from '../components/GazeCursor'
+import { DebugDrawer } from '../components/DebugDrawer'
+import { ExperimentManager } from '../core/ExperimentManager'
+import { useInputSource } from '../core/useInputSource'
 import { PERSONAL_SURVEY, PANAS_PRE_SURVEY } from '../surveys/preSurvey'
 import { FINAL_SURVEY } from '../surveys/finalSurvey'
 import { useStepCache } from '../hooks/useStepCache'
+import { METHOD_ZH } from '../types'
 import type { EventLog } from '../types'
 import type { SessionState } from '../App'
 
@@ -38,6 +43,24 @@ const saveStep = (pid: string, step: number) =>
 export function FlowPage({ session, addLog, onSetSession, onDone }: Props) {
   const pid = session.participantId
   const [step, setStep] = useState(session.initialFlowStep)
+  const [experimentConditionIndex, setExperimentConditionIndex] = useState(
+    session.experimenterConfig.startConditionIndex
+  )
+
+  const videoRef  = useRef<HTMLVideoElement>(null)
+  const cursorRef = useRef<HTMLDivElement>(null)
+
+  const { gaze, faceEvent, toPixel } = useInputSource({
+    gazeMode: session.gazeMode,
+    offsetX:  session.gazeOffsetX ?? 0,
+    offsetY:  session.gazeOffsetY ?? 0,
+    videoRef,
+    cursorRef,
+  })
+
+  const conditionOrder = useRef(
+    new ExperimentManager(pid, session.experimenterConfig).getConditionOrder()
+  ).current
 
   const [personalAnswers, setPersonalAnswers] = useStepCache<SurveyAnswers>(
     `step_personal_${pid}`, {}
@@ -95,6 +118,10 @@ export function FlowPage({ session, addLog, onSetSession, onDone }: Props) {
 
   const handleExperimentDone = () => advance(5)
 
+  const handleConditionChange = useCallback((index: number) => {
+    setExperimentConditionIndex(index)
+  }, [])
+
   const handleFinalSubmit = (answers: SurveyAnswers) => {
     saveJSON(`step_postsurvey_${pid}`, answers)
     addLog({
@@ -114,18 +141,28 @@ export function FlowPage({ session, addLog, onSetSession, onDone }: Props) {
 
   const postsurveyInitial = loadJSON<SurveyAnswers>(`step_postsurvey_${pid}`, {})
 
-  const showNextBtn   = step <= 2
-  const nextDisabled  =
+  const showNextBtn  = step <= 2
+  const nextDisabled =
     (step === 1 && !canProceedStep1) ||
     (step === 2 && !canProceedStep2)
 
+  const subSteps = step === 4 ? conditionOrder.map((cond, i) => ({
+    label:  `${cond.layout.toUpperCase()}/${METHOD_ZH[cond.inputMethod]}`,
+    done:   i < experimentConditionIndex,
+    active: i === experimentConditionIndex,
+  })) : undefined
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+      <video ref={videoRef} style={{ display: 'none' }} />
+      <GazeCursor ref={cursorRef} />
+
       <StepNav
         steps={STEPS}
         currentStep={step}
         completedSteps={completedSteps}
         onStepClick={handleStepClick}
+        subSteps={subSteps}
       />
 
       <div style={{ flex: 1, overflowY: 'auto' }}>
@@ -157,10 +194,9 @@ export function FlowPage({ session, addLog, onSetSession, onDone }: Props) {
 
         {step === 3 && (
           <TutorialPage
-            participantId={pid}
-            gazeOffsetX={session.gazeOffsetX}
-            gazeOffsetY={session.gazeOffsetY}
-            gazeMode={session.gazeMode}
+            gaze={gaze}
+            faceEvent={faceEvent}
+            toPixel={toPixel}
             onNext={handleCalibDone}
           />
         )}
@@ -168,8 +204,12 @@ export function FlowPage({ session, addLog, onSetSession, onDone }: Props) {
         {step === 4 && (
           <ExperimentPage
             session={session}
+            gaze={gaze}
+            faceEvent={faceEvent}
+            toPixel={toPixel}
             addLog={addLog}
             onNext={handleExperimentDone}
+            onConditionChange={handleConditionChange}
           />
         )}
 
@@ -204,6 +244,8 @@ export function FlowPage({ session, addLog, onSetSession, onDone }: Props) {
           </button>
         </div>
       )}
+
+      <DebugDrawer videoRef={videoRef} faceEvent={faceEvent} gaze={gaze} />
     </div>
   )
 }
