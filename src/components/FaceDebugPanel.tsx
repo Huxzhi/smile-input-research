@@ -168,9 +168,11 @@ export function FaceDebugPanel({ videoRef, faceEvent, gaze, embedded = false }: 
 
   if (embedded) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: 8, height: '100%', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flexDirection: 'row', gap: 12, padding: 8, alignItems: 'flex-start' }}>
         <canvas ref={canvasRef} width={cW} height={cH} style={{ borderRadius: 6, display: 'block', flexShrink: 0 }} />
-        {metrics}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
+          {metrics}
+        </div>
       </div>
     )
   }
