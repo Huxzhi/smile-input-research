@@ -180,9 +180,9 @@ export function DebugDrawer({
             <button onClick={() => onBlinkMinChange(Math.min(blinkMaxMs - 10, blinkMinMs + 10))} style={nudgeBtn}>+</button>
 
             <span style={ctrlLabel}>最长</span>
-            <button onClick={() => onBlinkMaxChange(Math.max(blinkMinMs + 10, blinkMaxMs - 10))} style={nudgeBtn}>−</button>
+            <button onClick={() => onBlinkMaxChange(Math.max(blinkMinMs + 100, blinkMaxMs - 100))} style={nudgeBtn}>−</button>
             <span style={{ ...ctrlValue, color: '#8be9fd' }}>{blinkMaxMs}ms</span>
-            <button onClick={() => onBlinkMaxChange(Math.min(600, blinkMaxMs + 10))} style={nudgeBtn}>+</button>
+            <button onClick={() => onBlinkMaxChange(Math.min(5000, blinkMaxMs + 100))} style={nudgeBtn}>+</button>
           </div>
         </div>
       )}
