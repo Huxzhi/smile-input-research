@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { InputController } from '../core/InputController'
-import { useGazeInput } from '../core/useGazeInput'
+import { useInputSource } from '../core/useInputSource'
+import { useGazeHitTest } from '../core/useGazeHitTest'
 import { GazeCursor } from '../components/GazeCursor'
 import { FaceDebugPanel } from '../components/FaceDebugPanel'
 import { QwertyKeyboard, computeQwertyKeySize } from '../components/keyboards/QwertyKeyboard'
@@ -77,13 +78,16 @@ export function DebugPage({ onExport, displayLogs, addLog: addLogProp, clearLogs
     addLog({ ts: Date.now(), type: 'phrase_show', description: `初始短语: "${phrase}"` })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const { gaze, faceEvent, gazeStatus, handleKeyRect, resetHitTracking } = useGazeInput({
+  const { gaze, faceEvent, gazeStatus, toPixel } = useInputSource({
     gazeMode,
     offsetX,
     offsetY,
     videoRef,
     cursorRef,
-    controllerRef,
+  })
+
+  const { handleKeyRect, resetHitTracking } = useGazeHitTest({
+    gaze, faceEvent, toPixel, controllerRef,
   })
 
   // Recreate controller when input method / layout / threshold changes
