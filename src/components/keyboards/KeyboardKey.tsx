@@ -20,9 +20,11 @@ export function KeyboardKey({ label, rectKey, controller, onKeyRect, isTarget, s
     }
   }, [label, rectKey, onKeyRect, size])
 
-  const progress = controller.getDwellProgress(label)
-  const isLocked = controller.getLockedKey() === label
-  const isFocused = controller.getFocusedKey() === (rectKey ?? label)
+  const progress     = controller.getDwellProgress(label)
+  const candidateKey = controller.getCandidateKey()
+  const isCandidate  = candidateKey === (rectKey ?? label)
+  const isCandidateLocked = isCandidate && controller.isCandidateLocked()
+  const isFocused    = controller.getFocusedKey() === (rectKey ?? label)
 
   const r = Math.round(size / 2 - 4)
   const svgSize = size + 8
@@ -41,13 +43,13 @@ export function KeyboardKey({ label, rectKey, controller, onKeyRect, isTarget, s
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: isTarget ? '#1a3a5c' : isFocused ? '#1e2a5a' : '#1e1e3e',
-        border: `2px solid ${isLocked ? '#f1fa8c' : isTarget ? '#50fa7b' : isFocused ? '#5a7aff' : '#333'}`,
-        boxShadow: isFocused && !isLocked ? '0 0 8px 2px rgba(90,122,255,0.5)' : undefined,
+        background: isTarget ? '#1a3a5c' : isCandidateLocked ? '#0a2414' : isCandidate ? '#1a2a18' : isFocused ? '#1e2a5a' : '#1e1e3e',
+        border: `2px solid ${isCandidateLocked ? '#50fa7b' : isCandidate ? '#f1fa8c' : isTarget ? '#50fa7b' : isFocused ? '#5a7aff' : '#333'}`,
+        boxShadow: isCandidateLocked ? '0 0 10px 3px rgba(80,250,123,0.4)' : isCandidate ? '0 0 8px 2px rgba(241,250,140,0.3)' : isFocused ? '0 0 8px 2px rgba(90,122,255,0.5)' : undefined,
         borderRadius,
-        color: isTarget ? '#50fa7b' : '#cdd6f4',
+        color: isTarget ? '#50fa7b' : isCandidate ? '#f1fa8c' : '#cdd6f4',
         fontSize,
-        fontWeight: isTarget ? 'bold' : 'normal',
+        fontWeight: isTarget || isCandidate ? 'bold' : 'normal',
         userSelect: 'none',
         cursor: 'default',
         flexShrink: 0,
