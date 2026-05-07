@@ -77,7 +77,7 @@ export function DebugDrawer({
       </div>
 
       {open && (
-        <div style={{ borderTop: '1px solid #1e2430' }}>
+        <div style={{ borderTop: '1px solid #1e2430', overflowY: 'auto', maxHeight: '60vh' }}>
           <FaceDebugPanel videoRef={videoRef} faceEvent={faceEvent} gaze={gaze} />
 
           {/* Gaze controls */}
@@ -107,6 +107,18 @@ export function DebugDrawer({
                   style={{ ...nudgeBtn, width: 'auto', padding: '0 8px', fontSize: 10 }}
                 >
                   重置
+                </button>
+              </>
+            )}
+
+            {onExport && (
+              <>
+                <div style={{ ...divider, marginLeft: 'auto' }} />
+                <button
+                  onClick={onExport}
+                  style={{ ...nudgeBtn, width: 'auto', padding: '0 10px', fontSize: 10, color: '#8be9fd' }}
+                >
+                  导出 CSV
                 </button>
               </>
             )}
@@ -163,21 +175,6 @@ export function DebugDrawer({
                   )
                 })}
               </div>
-            </div>
-          )}
-
-          {/* Export */}
-          {onExport && (
-            <div style={{ borderTop: '1px solid #1e2430', padding: '6px 12px' }}>
-              <button
-                onClick={onExport}
-                style={{
-                  padding: '4px 14px', borderRadius: 4, border: '1px solid #21262d',
-                  background: '#111827', color: '#8be9fd', cursor: 'pointer', fontSize: 11,
-                }}
-              >
-                导出 CSV
-              </button>
             </div>
           )}
 
