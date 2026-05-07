@@ -69,6 +69,7 @@ export default function App() {
             addLog={addLog}
             onSetSession={updater => setSession(s => s ? updater(s) : s)}
             onDone={() => { setSession(null); setMode('setup') }}
+            onExport={exportCSV}
           />
         )}
       </div>

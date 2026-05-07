@@ -32,6 +32,7 @@ interface Props {
   addLog: (log: EventLog) => void
   onSetSession: (updater: (s: SessionState) => SessionState) => void
   onDone: () => void
+  onExport?: () => void
 }
 
 const allComplete = (questions: typeof PERSONAL_SURVEY, answers: SurveyAnswers) =>
@@ -40,7 +41,7 @@ const allComplete = (questions: typeof PERSONAL_SURVEY, answers: SurveyAnswers) 
 const saveStep = (pid: string, step: number) =>
   saveJSON(`flow_step_${pid}`, step)
 
-export function FlowPage({ session, addLog, onSetSession, onDone }: Props) {
+export function FlowPage({ session, addLog, onSetSession, onDone, onExport }: Props) {
   const pid = session.participantId
   const [step, setStep] = useState(session.initialFlowStep)
   const videoRef  = useRef<HTMLVideoElement>(null)
@@ -274,6 +275,7 @@ export function FlowPage({ session, addLog, onSetSession, onDone }: Props) {
         onBlinkMaxChange={v => onSetSession(s => ({ ...s, blinkMaxMs: v }))}
         onConditionJump={step === 4 ? handleConditionJump : undefined}
         onConditionsChange={step === 4 ? setConditions : undefined}
+        onExport={onExport}
       />
     </div>
   )

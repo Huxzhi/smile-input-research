@@ -30,6 +30,7 @@ interface Props {
   onBlinkMaxChange: (v: number) => void
   onConditionJump?: (i: number) => void
   onConditionsChange?: (conds: ConditionConfig[]) => void
+  onExport?: () => void
 }
 
 export function DebugDrawer({
@@ -39,7 +40,7 @@ export function DebugDrawer({
   conditions, conditionIndex,
   onGazeModeChange, onOffsetXChange, onOffsetYChange,
   onSmileThresholdChange, onBlinkMinChange, onBlinkMaxChange,
-  onConditionJump, onConditionsChange,
+  onConditionJump, onConditionsChange, onExport,
 }: Props) {
   const [open, setOpen] = useState(() => loadJSON<boolean>(STORAGE_KEY, false))
 
@@ -162,6 +163,21 @@ export function DebugDrawer({
                   )
                 })}
               </div>
+            </div>
+          )}
+
+          {/* Export */}
+          {onExport && (
+            <div style={{ borderTop: '1px solid #1e2430', padding: '6px 12px' }}>
+              <button
+                onClick={onExport}
+                style={{
+                  padding: '4px 14px', borderRadius: 4, border: '1px solid #21262d',
+                  background: '#111827', color: '#8be9fd', cursor: 'pointer', fontSize: 11,
+                }}
+              >
+                导出 CSV
+              </button>
             </div>
           )}
 

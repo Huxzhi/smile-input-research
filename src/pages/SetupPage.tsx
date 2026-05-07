@@ -34,7 +34,7 @@ interface Props {
 const hasData = (key: string) =>
   Object.keys(loadJSON(key, {})).length > 0
 
-export function SetupPage({ addLog, onStart }: Props) {
+export function SetupPage({ addLog, onStart, onExport }: Props) {
   const [participantId, setParticipantId] = useState('')
   const [previewStep, setPreviewStep]     = useState<number | null>(null)
   const [conditionIdx, setConditionIdx]   = useState(0)
@@ -190,6 +190,7 @@ export function SetupPage({ addLog, onStart }: Props) {
         onSmileThresholdChange={setSmileThreshold}
         onBlinkMinChange={setBlinkMinMs}
         onBlinkMaxChange={setBlinkMaxMs}
+        onExport={onExport}
       />
     </div>
   )
